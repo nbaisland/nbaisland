@@ -1,0 +1,7 @@
+Project can be separated (right now) into Player, holding and user
+
+User - Physical person (or bot?) playing the ganme
+
+holding - linking user and player
+
+player - Lebron james etc.
