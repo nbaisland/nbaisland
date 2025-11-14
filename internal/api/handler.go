@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"net/http"
 	"github.com/gin-gonic/gin"
-	"github.com/nthnklssn/sports_island/internal/service"
+	"github.com/nthnklssn/nba_island/internal/service"
 )
 
 type CreateUserRequest struct {
@@ -49,6 +49,16 @@ func (h *Handler) GetUsers(c *gin.Context) {
 		return
 	}
 	c.JSON(200, users)
+}
+
+func (h *Handler) CheckHealth(c *gin.Context){
+	c.JSON(http.StatusOK, gin.H{"status" : "ok"})
+}
+
+func (h *Handler) CheckReady(c *gin.Context){
+	// ctx := c.Request.Context()
+	c.JSON(http.StatusOK, gin.H{"ready" : true})
+	// TODO: Finish this with check to db..
 }
 
 func (h *Handler) GetUserByID(c *gin.Context) {

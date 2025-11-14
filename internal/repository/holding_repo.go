@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5"
-	"github.com/nthnklssn/sports_island/internal/models"
+	"github.com/nthnklssn/nba_island/internal/models"
 )
 
 type HoldingRepository interface {

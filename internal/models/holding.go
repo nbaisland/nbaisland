@@ -9,8 +9,8 @@ type Holding struct {
     Quantity float64 `json:"quantity" binding:"required"`
 	BuyDate time.Time `json:"buy_date"`
 	BoughtFor float64 `json:"buy_price"`
-	SoldFor float64 `json:"sell_price"`
-	SellDate time.Time `json:"sell_date"`
+	SoldFor *float64 `json:"sell_price"` // Pointer needed to avoid nul issues
+	SellDate *time.Time `json:"sell_date"` // Pointer needed to avoid nul issues
 	Active bool `json:"active"`
 
 }

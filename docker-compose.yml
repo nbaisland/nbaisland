@@ -1,3 +1,4 @@
+version: '3.9'
 
 services:
   db:
@@ -5,9 +6,9 @@ services:
     container_name: my-postgres
     restart: always
     environment:
-      POSTGRES_USER: devuser
-      POSTGRES_PASSWORD: devpass
-      POSTGRES_DB: mydb
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -22,6 +23,24 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name:  go-api
+    restart: always
+    depends_on:
+      -  db
+    environment:
+    DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: 8080
+    ports:
+      -"8080:8080"
 
 volumes:
   pgdata:

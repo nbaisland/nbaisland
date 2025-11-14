@@ -11,9 +11,7 @@ import (
 )
 
 
-func NewDB(ctx context.Context) (*pgxpool.Pool, error) {
-	// TODO: make this non shitty,  probs some env or somet
-	dsn := "postgres://devuser:devpass@localhost:5432/mydb?sslmode=disable"
+func NewDB(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	cfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		log.Fatal(err)

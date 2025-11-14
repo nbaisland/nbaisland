@@ -4,17 +4,28 @@ import (
     "log"
     "context"
     "time"
+    "fmt"
 
     "github.com/gin-gonic/gin"
 
-    "github.com/nthnklssn/sports_island/internal/service"
-    "github.com/nthnklssn/sports_island/internal/repository"
-    "github.com/nthnklssn/sports_island/internal/api"
+    "github.com/nthnklssn/nba_island/internal/config"
+    "github.com/nthnklssn/nba_island/internal/service"
+    "github.com/nthnklssn/nba_island/internal/repository"
+    "github.com/nthnklssn/nba_island/internal/api"
 )
 
 func main() {
+    cfg := config.Load()
+	dsn := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",
+        cfg.DBUser, 
+        cfg.DBPassword,
+        cfg.DBHost,
+        cfg.DBPort,
+        cfg.DBName,
+    )
     ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-    pool, err := repository.NewDB(ctx)
+
+    pool, err := repository.NewDB(ctx, dsn)
     if err != nil {
         log.Fatal(err)
     }
@@ -36,7 +47,8 @@ func main() {
 
 
     r := gin.Default()
-
+    r.GET("/health", handler.CheckHealth)
+    r.GET("/ready", handler.CheckReady)
     r.GET("/users", handler.GetUsers)
     r.GET("/users/:id", handler.GetUserByID)
     r.POST("/users", handler.CreateUser)

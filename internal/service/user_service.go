@@ -5,8 +5,8 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/nthnklssn/sports_island/internal/models"
-    "github.com/nthnklssn/sports_island/internal/repository"
+	"github.com/nthnklssn/nba_island/internal/models"
+    "github.com/nthnklssn/nba_island/internal/repository"
 )
 
 type UserService struct {

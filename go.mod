@@ -1,4 +1,4 @@
-module github.com/nthnklssn/sports_island
+module github.com/nthnklssn/nba_island
 
 go 1.23.0
 
@@ -7,6 +7,7 @@ toolchain go1.24.9
 require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/jackc/pgx/v5 v5.7.6
+	github.com/joho/godotenv v1.5.1
 	golang.org/x/crypto v0.40.0
 )
 
