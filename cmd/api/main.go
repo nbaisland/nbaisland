@@ -16,12 +16,13 @@ import (
 
 func main() {
     cfg := config.Load()
-	dsn := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",
+	dsn := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v",
         cfg.DBUser, 
         cfg.DBPassword,
         cfg.DBHost,
         cfg.DBPort,
         cfg.DBName,
+        cfg.DBSSLMODE,
     )
     ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 
@@ -38,11 +39,13 @@ func main() {
     PlayerService := service.NewPlayerService(playerRepo)
     holdingRepo := &repository.PSQLHoldingRepo{Pool: pool}
     HoldingService := service.NewHoldingService(holdingRepo, playerRepo, userRepo)
+    HealthService := service.NewHealthService(pool)
 
     handler := &api.Handler{
         UserService: UserService,
         PlayerService: PlayerService,
         HoldingService: HoldingService,
+        HealthService : HealthService,
     }
 
 

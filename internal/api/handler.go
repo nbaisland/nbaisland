@@ -39,6 +39,7 @@ type Handler struct {
 	UserService *service.UserService
 	PlayerService *service.PlayerService
 	HoldingService *service.HoldingService
+	HealthService *service.HealthService
 }
 
 func (h *Handler) GetUsers(c *gin.Context) {
@@ -52,13 +53,16 @@ func (h *Handler) GetUsers(c *gin.Context) {
 }
 
 func (h *Handler) CheckHealth(c *gin.Context){
+	if err := h.HealthService.Check(c.Request.Context()); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error" : fmt.Sprintf("Could not confirm db is up: %v", err)})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"status" : "ok"})
 }
 
 func (h *Handler) CheckReady(c *gin.Context){
 	// ctx := c.Request.Context()
-	c.JSON(http.StatusOK, gin.H{"ready" : true})
-	// TODO: Finish this with check to db..
+	c.JSON(http.StatusOK, gin.H{"status" : "ok"})
 }
 
 func (h *Handler) GetUserByID(c *gin.Context) {
@@ -67,6 +71,7 @@ func (h *Handler) GetUserByID(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error" : "Provide a valid id"})
+		return
 	}
 	user, err := h.UserService.GetByID(ctx, id)
 	if err != nil {
