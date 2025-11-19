@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"net/http"
 	"github.com/gin-gonic/gin"
-	"github.com/nthnklssn/nba_island/internal/service"
+	"github.com/nbaisland/nbaisland/internal/service"
 )
 
 type CreateUserRequest struct {

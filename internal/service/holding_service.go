@@ -3,8 +3,8 @@ package service
 import ( 
 	"context"
 	"fmt"
-	"github.com/nthnklssn/nba_island/internal/models"
-    "github.com/nthnklssn/nba_island/internal/repository"
+	"github.com/nbaisland/nbaisland/internal/models"
+    "github.com/nbaisland/nbaisland/internal/repository"
 )
 type HoldingError struct {
 	Code string

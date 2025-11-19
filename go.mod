@@ -1,4 +1,4 @@
-module github.com/nthnklssn/nba_island
+module github.com/nbaisland/nbaisland
 
 go 1.23.0
 

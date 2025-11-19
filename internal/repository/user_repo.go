@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nthnklssn/nba_island/internal/models"
+	"github.com/nbaisland/nbaisland/internal/models"
 )
 
 type UserRepository interface {

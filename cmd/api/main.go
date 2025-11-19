@@ -8,10 +8,10 @@ import (
 
     "github.com/gin-gonic/gin"
 
-    "github.com/nthnklssn/nba_island/internal/config"
-    "github.com/nthnklssn/nba_island/internal/service"
-    "github.com/nthnklssn/nba_island/internal/repository"
-    "github.com/nthnklssn/nba_island/internal/api"
+    "github.com/nbaisland/nbaisland/internal/config"
+    "github.com/nbaisland/nbaisland/internal/service"
+    "github.com/nbaisland/nbaisland/internal/repository"
+    "github.com/nbaisland/nbaisland/internal/api"
 )
 
 func main() {
