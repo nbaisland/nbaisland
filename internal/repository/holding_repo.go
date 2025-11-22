@@ -10,6 +10,8 @@ import (
 
 type HoldingRepository interface {
     GetByID(ctx context.Context, id int) (*models.Holding, error)
+    GetByUserID(ctx context.Context, id int) (*models.Holding, error)
+    GetByPlayerID(ctx context.Context, id int) (*models.Holding, error)
     GetAll(ctx context.Context) ([]*models.Holding, error)
     Create(ctx context.Context, u *models.Holding) error
     Sell(ctx context.Context, id int, sell_price float64) error
@@ -23,6 +25,56 @@ type PSQLHoldingRepo struct {
 func (r *PSQLHoldingRepo) GetByID(ctx context.Context, id int) (*models.Holding, error) {
 	var h = &models.Holding{}
 	err := r.Pool.QueryRow(ctx, "SELECT id, user_id, player_id, bought_for, buy_date, quantity, sold_for, sell_date, active from Holdings where id=$1", id).Scan(
+		&h.ID,
+		&h.UserID,
+		&h.PlayerID,
+		&h.BoughtFor,
+		&h.BuyDate,
+		&h.Quantity,
+		&h.SoldFor,
+		&h.SellDate,
+		&h.Active,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return h, nil
+}
+
+func (r *PSQLHoldingRepo) GetByUserID(ctx context.Context, id int) (*models.Holding, error) {
+	var h = &models.Holding{}
+	err := r.Pool.QueryRow(ctx, "SELECT id, user_id, player_id, bought_for, buy_date, quantity, sold_for, sell_date, active from Holdings where user_id=$1", id).Scan(
+		&h.ID,
+		&h.UserID,
+		&h.PlayerID,
+		&h.BoughtFor,
+		&h.BuyDate,
+		&h.Quantity,
+		&h.SoldFor,
+		&h.SellDate,
+		&h.Active,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return h, nil
+}
+
+func (r *PSQLHoldingRepo) GetByPlayerID(ctx context.Context, id int) (*models.Holding, error) {
+	var h = &models.Holding{}
+	err := r.Pool.QueryRow(ctx, "SELECT id, user_id, player_id, bought_for, buy_date, quantity, sold_for, sell_date, active from Holdings where player_id=$1", id).Scan(
 		&h.ID,
 		&h.UserID,
 		&h.PlayerID,

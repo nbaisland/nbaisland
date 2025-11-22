@@ -37,6 +37,22 @@ func (s *HoldingService) GetHoldingByID(ctx context.Context, id int) (*models.Ho
 	return h, err
 }
 
+func (s *HoldingService) GetByUserID(ctx context.Context, id int) (*models.Holding, error){
+	h, err := s.HoldingRepo.GetByUserID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return h, err
+}
+
+func (s *HoldingService) GetByPlayerID(ctx context.Context, id int) (*models.Holding, error){
+	h, err := s.HoldingRepo.GetByPlayerID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return h, err
+}
+
 func (s *HoldingService) MakePurchase(ctx context.Context, player_id int, user_id int, quantity float64) (error) {
 	userDetail, err := s.UserRepo.GetByID(ctx, user_id)
 	if err != nil {

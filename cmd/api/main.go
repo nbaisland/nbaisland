@@ -7,7 +7,7 @@ import (
     "fmt"
 
     "github.com/gin-gonic/gin"
-
+    "github.com/gin-contrib/cors"
     "github.com/nbaisland/nbaisland/internal/config"
     "github.com/nbaisland/nbaisland/internal/service"
     "github.com/nbaisland/nbaisland/internal/repository"
@@ -50,16 +50,28 @@ func main() {
 
 
     r := gin.Default()
+
+    r.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"http://127.0.0.1:5173"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"Content-Type", "Authorization"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+        MaxAge:           12 * time.Hour,
+    }))
+
     r.GET("/health", handler.CheckHealth)
     r.GET("/ready", handler.CheckReady)
     r.GET("/users", handler.GetUsers)
     r.GET("/users/:id", handler.GetUserByID)
+    r.GET("/users/:id/holdings", handler.GetHoldingsOfUser)
     r.POST("/users", handler.CreateUser)
     r.DELETE("/users/:id", handler.DeleteUser)
 
 
     r.GET("/players", handler.GetPlayers)
     r.GET("/players/:id", handler.GetPlayerByID)
+    r.GET("/players/:id/holdings", handler.GetHoldingsOfPlayer)
     r.POST("/players", handler.CreatePlayer)
     r.DELETE("/players/:id", handler.DeletePlayer)
 

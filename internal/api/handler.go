@@ -85,6 +85,27 @@ func (h *Handler) GetUserByID(c *gin.Context) {
 	c.JSON(200, user)
 }
 
+func (h* Handler) GetHoldingsOfUser(c *gin.Context){
+	ctx := c.Request.Context()
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error" : "Provide a valid id"})
+		return
+	}
+	holdings, err := h.HoldingService.GetByUserID(ctx, id)
+	if err != nil {
+		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch holdings for user for id specified `%v`", id)})
+		return
+	}
+	if holdings == nil {
+		c.JSON(http.StatusNotFound, gin.H{"message" : "No Holdings found for user"})
+		return
+	}
+	c.JSON(200, holdings)
+
+}
+
 func (h* Handler) CreateUser(c *gin.Context) {
 	var req CreateUserRequest
 	if err := c.BindJSON(&req); err != nil {
@@ -131,7 +152,7 @@ func (h* Handler) GetPlayers(c *gin.Context) {
 	players, err := h.PlayerService.GetAll(ctx)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error" : "failed to fetch players"})
+		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch players : %v", err)})
 		return
 	}
 	c.JSON(200, players)
@@ -154,6 +175,25 @@ func (h* Handler) GetPlayerByID(c *gin.Context) {
 		return
 	}
 	c.JSON(200, player)
+}
+
+func (h* Handler) GetHoldingsOfPlayer(c *gin.Context){
+	ctx := c.Request.Context()
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error" : "Provide a valid id"})
+	}
+	holdings, err := h.HoldingService.GetByPlayerID(ctx, id)
+	if err != nil {
+		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch holdings for player for id specified `%v`", id)})
+		return
+	}
+	if holdings == nil {
+		c.JSON(http.StatusNotFound, gin.H{"message" : "No Holdings found for player"})
+		return
+	}
+	c.JSON(200, holdings)
 }
 
 func (h* Handler) CreatePlayer(c *gin.Context){
