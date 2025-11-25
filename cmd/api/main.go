@@ -69,7 +69,7 @@ func main() {
     r.DELETE("/users/:id", handler.DeleteUser)
 
 
-    r.GET("/players", handler.GetPlayers)
+    r.GET("/players", handler.GetPlayersByID)
     r.GET("/players/:id", handler.GetPlayerByID)
     r.GET("/players/:id/holdings", handler.GetHoldingsOfPlayer)
     r.POST("/players", handler.CreatePlayer)

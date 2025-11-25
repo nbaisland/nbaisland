@@ -18,6 +18,10 @@ func(s *PlayerService) GetAll(ctx context.Context) ([]*models.Player, error) {
 	return s.Repo.GetAll(ctx)
 }
 
+func(s *PlayerService) GetPlayersByIDs(ctx context.Context, player_ids []int) ([]*models.Player, error) {
+	return s.Repo.GetByIDs(ctx, player_ids)
+}
+
 func(s *PlayerService) GetPlayerByID(ctx context.Context, id int) (*models.Player, error) {
 	return s.Repo.GetByID(ctx, id)
 }

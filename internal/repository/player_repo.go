@@ -12,6 +12,7 @@ type PlayerRepository interface {
     GetByID(ctx context.Context, id int) (*models.Player, error)
 	GetValueByID(ctx context.Context, id int) (float64, error)
     GetAll(ctx context.Context) ([]*models.Player, error)
+	GetByIDs(ctx context.Context, ids []int) ([]*models.Player, error)
     Create(ctx context.Context, u *models.Player) error
     Update(ctx context.Context, u *models.Player) error
     Delete(ctx context.Context, id int) error
@@ -41,6 +42,29 @@ func (r *PSQLPlayerRepo) GetByID(ctx context.Context, id int) (*models.Player, e
 	return p, nil
 }
 
+func (r *PSQLPlayerRepo) GetByIDs(ctx context.Context, ids []int) ([]*models.Player, error) {
+	var players []*models.Player
+	rows, err := r.Pool.Query(ctx, "SELECT id, name, value, capacity from players where id=ANY($1)", ids)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		p := &models.Player{}
+		err := rows.Scan(&p.ID,
+			&p.Name,
+			&p.Value,
+			&p.Capacity,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+		players = append(players, p)
+	}
+	return players, nil
+}
+
 func (r *PSQLPlayerRepo) GetValueByID(ctx context.Context, id int) (float64, error) {
 	var value float64
 	err := r.Pool.QueryRow(ctx, "SELECT value from players where id=$1", id).Scan(&value)
@@ -60,6 +84,7 @@ func (r *PSQLPlayerRepo) GetAll(ctx context.Context) ([]*models.Player, error){
 	var players []*models.Player
 
 	rows, err := r.Pool.Query(ctx, "SELECT id, name, value, capacity from players")
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
