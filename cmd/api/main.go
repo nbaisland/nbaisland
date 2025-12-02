@@ -37,14 +37,14 @@ func main() {
     UserService := service.NewUserService(userRepo)
     playerRepo := &repository.PSQLPlayerRepo{Pool: pool}
     PlayerService := service.NewPlayerService(playerRepo)
-    holdingRepo := &repository.PSQLHoldingRepo{Pool: pool}
-    HoldingService := service.NewHoldingService(holdingRepo, playerRepo, userRepo)
+    transactionRepo := &repository.PSQLTransactionRepo{Pool: pool}
+    TransactionService := service.NewTransactionService(transactionRepo, playerRepo, userRepo)
     HealthService := service.NewHealthService(pool)
 
     handler := &api.Handler{
         UserService: UserService,
         PlayerService: PlayerService,
-        HoldingService: HoldingService,
+        TransactionService: TransactionService,
         HealthService : HealthService,
     }
 
@@ -64,20 +64,23 @@ func main() {
     r.GET("/ready", handler.CheckReady)
     r.GET("/users", handler.GetUsers)
     r.GET("/users/:id", handler.GetUserByID)
-    r.GET("/users/:id/holdings", handler.GetHoldingsOfUser)
+    r.GET("/users/:id/transactions", handler.GetTransactionsOfUser)
+    r.GET("/users/:id/positions", handler.GetPositionsOfUser)
     r.POST("/users", handler.CreateUser)
     r.DELETE("/users/:id", handler.DeleteUser)
 
 
     r.GET("/players", handler.GetPlayersByID)
     r.GET("/players/:id", handler.GetPlayerByID)
-    r.GET("/players/:id/holdings", handler.GetHoldingsOfPlayer)
+    r.GET("/players/:id/transactions", handler.GetTransactionsOfPlayer)
+    r.GET("/players/:id/positions", handler.GetPositionsOfPlayer)
     r.POST("/players", handler.CreatePlayer)
     r.DELETE("/players/:id", handler.DeletePlayer)
 
-    r.GET("/holdings", handler.GetHoldings)
-    r.POST("/holdings", handler.MakePurchase)
-    r.GET("/holdings/:id", handler.GetHoldingByID)
-    r.POST("/holdings/:id/sell", handler.SellHolding)
+    r.GET("/transactions", handler.GetTransactions)
+    r.POST("/transactions/buy", handler.BuyTransaction)
+    r.GET("/transactions/:id", handler.GetTransactionByID)
+    r.POST("/transactions/sell", handler.SellTransaction)
+    r.GET("/positions", handler.GetPositions)
     r.Run("0.0.0.0:8080")
 }

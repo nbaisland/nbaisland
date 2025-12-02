@@ -1,7 +1,20 @@
-Project can be separated (right now) into Player, holding and user
+This is the backend to a "Fantasy" sports style real estate game, NBAIsland
 
-User - Physical person (or bot?) playing the ganme
+This game is made in homage to Bill Simmons a sports podcaster who inspired me to make this game.
 
-holding - linking user and player
+There are users which would be the person using this app, 'players' which would be NBA players.. Nikola Jokic, Steph Curry etc and Transactions which tie them together.
 
-player - Lebron james etc.
+Backend is split into Service layer, repository layer and handler.
+
+Goal is to have "Users" stake their claim on players early, be able to prove to their friends, The world, whoever that they liked a player from the start. 
+
+Abstracting this to an "island" analogy means each player should have their own island, which changes in popularity depending on stats output, popularity, and projected performance.
+
+Players like Luka Doncic, Shai Gilgeous Alexander, Nikola Jokic, should have more value as they are producing stats and in their primes.
+
+Players like Lebron James, Steph Curry and Kevin Durant are nearing the ends of their primes and should be declining in value, however should still be more valuable than an up and coming player.
+
+I dont want this to just be a stock trading type game, which I think wouldn't be as interesting as this approach.
+
+Users should only have the ability to "be in" on so many players at once, otherwise someone would just buy up the entire rookie class, and there should only be so much space a certain player can have on their "island", incentivizing users to put their money where their mouth is.
+

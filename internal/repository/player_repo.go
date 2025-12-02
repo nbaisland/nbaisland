@@ -9,20 +9,20 @@ import (
 )
 
 type PlayerRepository interface {
-    GetByID(ctx context.Context, id int) (*models.Player, error)
-	GetValueByID(ctx context.Context, id int) (float64, error)
+    GetByID(ctx context.Context, id int64) (*models.Player, error)
+	GetValueByID(ctx context.Context, id int64) (float64, error)
     GetAll(ctx context.Context) ([]*models.Player, error)
-	GetByIDs(ctx context.Context, ids []int) ([]*models.Player, error)
+	GetByIDs(ctx context.Context, ids []int64) ([]*models.Player, error)
     Create(ctx context.Context, u *models.Player) error
     Update(ctx context.Context, u *models.Player) error
-    Delete(ctx context.Context, id int) error
+    Delete(ctx context.Context, id int64) error
 }
 
 type PSQLPlayerRepo struct {
     Pool *pgxpool.Pool
 }
 
-func (r *PSQLPlayerRepo) GetByID(ctx context.Context, id int) (*models.Player, error) {
+func (r *PSQLPlayerRepo) GetByID(ctx context.Context, id int64) (*models.Player, error) {
 	var p = &models.Player{}
 	err := r.Pool.QueryRow(ctx, "SELECT id, name, value, capacity from players where id=$1", id).Scan(
 		&p.ID,
@@ -42,7 +42,7 @@ func (r *PSQLPlayerRepo) GetByID(ctx context.Context, id int) (*models.Player, e
 	return p, nil
 }
 
-func (r *PSQLPlayerRepo) GetByIDs(ctx context.Context, ids []int) ([]*models.Player, error) {
+func (r *PSQLPlayerRepo) GetByIDs(ctx context.Context, ids []int64) ([]*models.Player, error) {
 	var players []*models.Player
 	rows, err := r.Pool.Query(ctx, "SELECT id, name, value, capacity from players where id=ANY($1)", ids)
 	defer rows.Close()
@@ -65,7 +65,7 @@ func (r *PSQLPlayerRepo) GetByIDs(ctx context.Context, ids []int) ([]*models.Pla
 	return players, nil
 }
 
-func (r *PSQLPlayerRepo) GetValueByID(ctx context.Context, id int) (float64, error) {
+func (r *PSQLPlayerRepo) GetValueByID(ctx context.Context, id int64) (float64, error) {
 	var value float64
 	err := r.Pool.QueryRow(ctx, "SELECT value from players where id=$1", id).Scan(&value)
 
@@ -114,17 +114,17 @@ func (r *PSQLPlayerRepo) Update(ctx context.Context, p *models.Player) error {
 	return err
 }
 
-func (r *PSQLPlayerRepo) UpdateValue(ctx context.Context, id int, v float64) error {
+func (r *PSQLPlayerRepo) UpdateValue(ctx context.Context, id int64, v float64) error {
 	_, err := r.Pool.Exec(ctx, "UPDATE players SET value=$1 WHERE id=$2", v, id)
 	return err
 }
 
-func (r *PSQLPlayerRepo) UpdateCapacity(ctx context.Context, id int, c float64) error {
+func (r *PSQLPlayerRepo) UpdateCapacity(ctx context.Context, id int64, c float64) error {
 	_, err := r.Pool.Exec(ctx, "UPDATE players SET capacity=$1 WHERE id=$2", c, id)
 	return err
 }
 
-func (r *PSQLPlayerRepo) Delete(ctx context.Context, id int) error {
+func (r *PSQLPlayerRepo) Delete(ctx context.Context, id int64) error {
 	_, err := r.Pool.Exec(ctx, "DELETE FROM players WHERE id=$1", id)
 	return err
 }

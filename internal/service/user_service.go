@@ -21,7 +21,7 @@ func(s *UserService) GetAll(ctx context.Context) ([]*models.User, error) {
 	return s.Repo.GetAll(ctx)
 }
 
-func(s *UserService) GetByID(ctx context.Context, id int) (*models.User, error) {
+func(s *UserService) GetByID(ctx context.Context, id int64) (*models.User, error) {
 	return s.Repo.GetByID(ctx, id)
 }
 
@@ -47,6 +47,6 @@ func(s *UserService) CreateUser(ctx context.Context, name string, email string, 
 
 }
 
-func(s *UserService) DeleteUser(ctx context.Context, id int) error {
+func(s *UserService) DeleteUser(ctx context.Context, id int64) error {
 	return s.Repo.Delete(ctx, id)
 }
