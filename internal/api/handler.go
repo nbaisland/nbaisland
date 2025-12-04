@@ -11,6 +11,7 @@ import (
 
 type CreateUserRequest struct {
 	Name    string `json:"name"`
+	UserName    string `json:"userName"`
 	Email    string `json:"email"`
 	Password    string `json:"password"`
 }
@@ -18,6 +19,7 @@ type CreateUserRequest struct {
 type CreatedUserResponse struct {
 	ID    int64 `json:"id`
 	Name    string `json:"name`
+	UserName    string `json:"userName"`
 	Email    string `json:"email`
 }
 
@@ -25,6 +27,7 @@ type CreatePlayer struct {
 	Name    string `json:"name"`
 	Value   float64 `json:"value"`
 	Capacity  int   `json:"capacity"`
+	Slug    string  `json:"slug"`
 }
 
 type TransactionRequest struct {
@@ -83,6 +86,27 @@ func (h *Handler) GetUserByID(c *gin.Context) {
 	c.JSON(200, user)
 }
 
+
+func (h *Handler) GetUserByUserName(c *gin.Context) {
+	ctx := c.Request.Context()
+	userName := c.Param("username")
+	if userName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"Error" : "Provide a username"})
+		return
+	}
+	user, err := h.UserService.GetByUserName(ctx, userName)
+	if err != nil {
+		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch user for username specified `%v`, %v", userName, err)})
+		return
+	}
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"Error" : "Could not find user"})
+		return
+	}
+	c.JSON(200, user)
+}
+
+
 func (h* Handler) GetTransactionsOfUser(c *gin.Context){
 	ctx := c.Request.Context()
 	idStr := c.Param("id")
@@ -112,7 +136,7 @@ func (h* Handler) CreateUser(c *gin.Context) {
 		})
 		return
 	}
-	user, err := h.UserService.CreateUser(c.Request.Context(), req.Name, req.Email, req.Password)
+	user, err := h.UserService.CreateUser(c.Request.Context(), req.Name, req.UserName, req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error" : fmt.Sprintf("Failed to create user: %v", err),
@@ -121,6 +145,7 @@ func (h* Handler) CreateUser(c *gin.Context) {
 	}
 	res := CreatedUserResponse{
 		ID: user.ID,
+		UserName: user.UserName,
 		Name: user.Name,
 		Email: user.Email,
 	}
@@ -203,6 +228,25 @@ func (h* Handler) GetPlayerByID(c *gin.Context) {
 	c.JSON(200, player)
 }
 
+func (h* Handler) GetPlayerBySlug(c *gin.Context) {
+	ctx := c.Request.Context()
+	slug := c.Param("slug")
+	if slug == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"Error" : "Provide a valid Slug"})
+		return
+	}
+	player, err := h.PlayerService.GetPlayerBySlug(ctx, slug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"Error" : fmt.Sprintf("Could not find player: %v", err)}) 
+		return
+	}
+	if player == nil {
+		c.JSON(http.StatusNotFound, gin.H{"Error" : "Could not find player"})
+		return
+	}
+	c.JSON(200, player)
+}
+
 func (h* Handler) GetTransactionsOfPlayer(c *gin.Context){
 	ctx := c.Request.Context()
 	idStr := c.Param("id")
@@ -232,7 +276,7 @@ func (h* Handler) CreatePlayer(c *gin.Context){
 		})
 		return
 	}
-	err := h.PlayerService.CreatePlayer(ctx, req.Name, req.Value, req.Capacity)
+	err := h.PlayerService.CreatePlayer(ctx, req.Name, req.Value, req.Capacity, req.Slug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("Could not create player: %v", err),

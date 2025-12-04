@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/nbaisland/nbaisland/internal/models"
     "github.com/nbaisland/nbaisland/internal/repository"
+    "github.com/nbaisland/nbaisland/internal/utils"
 )
 
 type PlayerService struct {
@@ -26,11 +27,19 @@ func(s *PlayerService) GetPlayerByID(ctx context.Context, id int64) (*models.Pla
 	return s.Repo.GetByID(ctx, id)
 }
 
-func(s *PlayerService) CreatePlayer(ctx context.Context, name string, value float64, capacity int) (error){
+func(s *PlayerService) GetPlayerBySlug(ctx context.Context, slug string) (*models.Player, error) {
+	return s.Repo.GetBySlug(ctx, slug)
+}
+
+func(s *PlayerService) CreatePlayer(ctx context.Context, name string, value float64, capacity int, slug string) (error){
+	if slug == "" {
+        slug = utils.ToSlug(name)
+    }
 	p := &models.Player{
 		Name: name,
 		Value: value,
 		Capacity: capacity,
+		Slug: slug,
 	}
 	return s.Repo.Create(ctx, p)
 }

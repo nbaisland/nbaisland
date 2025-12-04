@@ -10,9 +10,11 @@ import (
 
 type UserRepository interface {
     GetByID(ctx context.Context, id int64) (*models.User, error)
+	GetByUserName(ctx context.Context, username string) (*models.User, error)
     GetAll(ctx context.Context) ([]*models.User, error)
     Create(ctx context.Context, u *models.User) error
     UpdateName(ctx context.Context, id int64, name string) error
+	UpdateUserName(ctx context.Context, id int64, userName string) error
     UpdatePassword(ctx context.Context, id int64, password string) error
     UpdateEmail(ctx context.Context, id int64, email string) error
     UpdateCurrency(ctx context.Context, id int64, currency float64) error
@@ -25,8 +27,30 @@ type PSQLUserRepo struct {
 
 func (r *PSQLUserRepo) GetByID(ctx context.Context, id int64) (*models.User, error) {
 	var u = &models.User{}
-	err := r.Pool.QueryRow(ctx, "SELECT id, name, email, currency from users where id=$1", id).Scan(
+	err := r.Pool.QueryRow(ctx, "SELECT id, name, username, email, currency from users where id=$1", id).Scan(
 		&u.ID,
+		&u.UserName,
+		&u.Name,
+		&u.Email,
+		&u.Currency,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
+func (r *PSQLUserRepo) GetByUserName(ctx context.Context, username string) (*models.User, error) {
+	var u = &models.User{}
+	err := r.Pool.QueryRow(ctx, "SELECT id, name, username, email, currency from users where username=$1", username).Scan(
+		&u.ID,
+		&u.UserName,
 		&u.Name,
 		&u.Email,
 		&u.Currency,
@@ -47,13 +71,13 @@ func (r *PSQLUserRepo) GetByID(ctx context.Context, id int64) (*models.User, err
 func (r *PSQLUserRepo) GetAll(ctx context.Context) ([]*models.User, error){
 	var users []*models.User
 
-	rows, err := r.Pool.Query(ctx, "SELECT id, name, email, currency from users")
+	rows, err := r.Pool.Query(ctx, "SELECT id, name, username, email, currency from users")
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	for rows.Next() {
 		u := &models.User{}
-		err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.Currency)
+		err := rows.Scan(&u.ID, &u.Name, &u.UserName, &u.Email, &u.Currency)
 
 		if err != nil {
 			return nil, err
@@ -64,14 +88,19 @@ func (r *PSQLUserRepo) GetAll(ctx context.Context) ([]*models.User, error){
 }
 
 func (r *PSQLUserRepo) Create(ctx context.Context, u *models.User) error {
-	err := r.Pool.QueryRow(ctx, "INSERT INTO users (name, email, currency, password) VALUES ($1, $2, $3, $4) RETURNING id",
-	u.Name, u.Email, u.Currency, u.Password,
+	err := r.Pool.QueryRow(ctx, "INSERT INTO users (name, username, email, currency, password) VALUES ($1, $2, $3, $4) RETURNING id",
+	u.Name, u.UserName, u.Email, u.Currency, u.Password,
 	).Scan(&u.ID)
 	return err
 }
 
 func (r *PSQLUserRepo) UpdateName(ctx context.Context, id int64, name string) error {
 	_, err := r.Pool.Exec(ctx, "UPDATE users SET name=$2 where id = $1", id, name)
+	return err
+}
+
+func (r *PSQLUserRepo) UpdateUserName(ctx context.Context, id int64, userName string) error {
+	_, err := r.Pool.Exec(ctx, "UPDATE users SET username=$2 where id = $1", id, userName)
 	return err
 }
 

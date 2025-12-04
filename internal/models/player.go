@@ -5,4 +5,5 @@ type Player struct {
     Name  string `json:"name" binding:"required"`
     Value float64    `json:"value" binding:"required"`
     Capacity int    `json:"capacity" binding:"required"`
+    Slug string    `json:"slug" binding:"required"`
 }

@@ -64,6 +64,7 @@ func main() {
     r.GET("/ready", handler.CheckReady)
     r.GET("/users", handler.GetUsers)
     r.GET("/users/:id", handler.GetUserByID)
+    r.GET("/users/username/:username", handler.GetUserByUserName)
     r.GET("/users/:id/transactions", handler.GetTransactionsOfUser)
     r.GET("/users/:id/positions", handler.GetPositionsOfUser)
     r.POST("/users", handler.CreateUser)
@@ -72,6 +73,7 @@ func main() {
 
     r.GET("/players", handler.GetPlayersByID)
     r.GET("/players/:id", handler.GetPlayerByID)
+    r.GET("/players/name/:slug", handler.GetPlayerBySlug)
     r.GET("/players/:id/transactions", handler.GetTransactionsOfPlayer)
     r.GET("/players/:id/positions", handler.GetPositionsOfPlayer)
     r.POST("/players", handler.CreatePlayer)

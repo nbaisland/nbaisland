@@ -10,6 +10,7 @@ import (
 
 type PlayerRepository interface {
     GetByID(ctx context.Context, id int64) (*models.Player, error)
+	GetBySlug(ctx context.Context, slug string) (*models.Player, error)
 	GetValueByID(ctx context.Context, id int64) (float64, error)
     GetAll(ctx context.Context) ([]*models.Player, error)
 	GetByIDs(ctx context.Context, ids []int64) ([]*models.Player, error)
@@ -24,11 +25,33 @@ type PSQLPlayerRepo struct {
 
 func (r *PSQLPlayerRepo) GetByID(ctx context.Context, id int64) (*models.Player, error) {
 	var p = &models.Player{}
-	err := r.Pool.QueryRow(ctx, "SELECT id, name, value, capacity from players where id=$1", id).Scan(
+	err := r.Pool.QueryRow(ctx, "SELECT id, name, value, capacity, slug from players where id=$1", id).Scan(
 		&p.ID,
 		&p.Name,
 		&p.Value,
 		&p.Capacity,
+		&p.Slug,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (r *PSQLPlayerRepo) GetBySlug(ctx context.Context, slug string) (*models.Player, error) {
+	var p = &models.Player{}
+	err := r.Pool.QueryRow(ctx, "SELECT id, name, value, capacity, slug from players where slug=$1", slug).Scan(
+		&p.ID,
+		&p.Name,
+		&p.Value,
+		&p.Capacity,
+		&p.Slug,
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -44,7 +67,7 @@ func (r *PSQLPlayerRepo) GetByID(ctx context.Context, id int64) (*models.Player,
 
 func (r *PSQLPlayerRepo) GetByIDs(ctx context.Context, ids []int64) ([]*models.Player, error) {
 	var players []*models.Player
-	rows, err := r.Pool.Query(ctx, "SELECT id, name, value, capacity from players where id=ANY($1)", ids)
+	rows, err := r.Pool.Query(ctx, "SELECT id, name, value, capacity, slug from players where id=ANY($1)", ids)
 	defer rows.Close()
 	if err != nil {
 		return nil, err
@@ -55,6 +78,7 @@ func (r *PSQLPlayerRepo) GetByIDs(ctx context.Context, ids []int64) ([]*models.P
 			&p.Name,
 			&p.Value,
 			&p.Capacity,
+			&p.Slug,
 		)
 
 		if err != nil {
@@ -83,7 +107,7 @@ func (r *PSQLPlayerRepo) GetValueByID(ctx context.Context, id int64) (float64, e
 func (r *PSQLPlayerRepo) GetAll(ctx context.Context) ([]*models.Player, error){
 	var players []*models.Player
 
-	rows, err := r.Pool.Query(ctx, "SELECT id, name, value, capacity from players")
+	rows, err := r.Pool.Query(ctx, "SELECT id, name, value, capacity, slug from players")
 	defer rows.Close()
 	if err != nil {
 		return nil, err
@@ -94,6 +118,7 @@ func (r *PSQLPlayerRepo) GetAll(ctx context.Context) ([]*models.Player, error){
 			&p.Name,
 			&p.Value,
 			&p.Capacity,
+			&p.Slug,
 		)
 
 		if err != nil {

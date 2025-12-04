@@ -25,7 +25,11 @@ func(s *UserService) GetByID(ctx context.Context, id int64) (*models.User, error
 	return s.Repo.GetByID(ctx, id)
 }
 
-func(s *UserService) CreateUser(ctx context.Context, name string, email string, password string) (*models.User, error) {
+func(s *UserService) GetByUserName(ctx context.Context, userName string) (*models.User, error) {
+	return s.Repo.GetByUserName(ctx, userName)
+}
+
+func(s *UserService) CreateUser(ctx context.Context, name string, userName string, email string, password string) (*models.User, error) {
 	// TODO: Validate password length etc ..
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	hashedStr := string(hashedPassword)
@@ -35,6 +39,7 @@ func(s *UserService) CreateUser(ctx context.Context, name string, email string, 
 	}
 	u := &models.User{
 		Name: name,
+		UserName: userName,
 		Email: email,
 		Password: hashedStr,
 		Currency: startingCurrency,
