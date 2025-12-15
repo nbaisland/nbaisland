@@ -12,6 +12,7 @@ import (
     "github.com/nbaisland/nbaisland/internal/service"
     "github.com/nbaisland/nbaisland/internal/repository"
     "github.com/nbaisland/nbaisland/internal/api"
+    "github.com/nbaisland/nbaisland/internal/nba"
 )
 
 func main() {
@@ -33,6 +34,10 @@ func main() {
     defer pool.Close()
     log.Println("Connected to the database successfully!")
 
+    nbaClient := nba.NewClient()
+    nbaRepo := nba.NewRepository(pool)
+    nbaService := nba.NewService(nbaClient, nbaRepo, pool)
+
     userRepo := &repository.PSQLUserRepo{Pool: pool}
     UserService := service.NewUserService(userRepo)
     playerRepo := &repository.PSQLPlayerRepo{Pool: pool}
@@ -41,13 +46,21 @@ func main() {
     TransactionService := service.NewTransactionService(transactionRepo, playerRepo, userRepo)
     HealthService := service.NewHealthService(pool)
 
-    handler := &api.Handler{
+    userHandler := &api.Handler{
         UserService: UserService,
-        PlayerService: PlayerService,
-        TransactionService: TransactionService,
-        HealthService : HealthService,
     }
 
+    playerHandler := &api.Handler{
+        PlayerService: PlayerService,
+    }
+
+    transactionHandler := &api.Handler{
+        TransactionService: TransactionService,
+    }
+
+    healthHandler := &api.Handler{
+        HealthService : HealthService,
+    }
 
     r := gin.Default()
 
@@ -60,29 +73,31 @@ func main() {
         MaxAge:           12 * time.Hour,
     }))
 
-    r.GET("/health", handler.CheckHealth)
-    r.GET("/ready", handler.CheckReady)
-    r.GET("/users", handler.GetUsers)
-    r.GET("/users/:id", handler.GetUserByID)
-    r.GET("/users/username/:username", handler.GetUserByUserName)
-    r.GET("/users/:id/transactions", handler.GetTransactionsOfUser)
-    r.GET("/users/:id/positions", handler.GetPositionsOfUser)
-    r.POST("/users", handler.CreateUser)
-    r.DELETE("/users/:id", handler.DeleteUser)
+    r.GET("/health", healthHandler.CheckHealth)
+    r.GET("/ready", healthHandler.CheckReady)
+
+    r.GET("/users", userHandler.GetUsers)
+    r.GET("/users/:id", userHandler.GetUserByID)
+    r.GET("/users/username/:username", userHandler.GetUserByUserName)
+    r.POST("/users", userHandler.CreateUser)
+    r.DELETE("/users/:id", userHandler.DeleteUser)
 
 
-    r.GET("/players", handler.GetPlayersByID)
-    r.GET("/players/:id", handler.GetPlayerByID)
-    r.GET("/players/name/:slug", handler.GetPlayerBySlug)
-    r.GET("/players/:id/transactions", handler.GetTransactionsOfPlayer)
-    r.GET("/players/:id/positions", handler.GetPositionsOfPlayer)
-    r.POST("/players", handler.CreatePlayer)
-    r.DELETE("/players/:id", handler.DeletePlayer)
 
-    r.GET("/transactions", handler.GetTransactions)
-    r.POST("/transactions/buy", handler.BuyTransaction)
-    r.GET("/transactions/:id", handler.GetTransactionByID)
-    r.POST("/transactions/sell", handler.SellTransaction)
-    r.GET("/positions", handler.GetPositions)
+    r.GET("/players", playerHandler.GetPlayersByID)
+    r.GET("/players/:id", playerHandler.GetPlayerByID)
+    r.GET("/players/name/:slug", playerHandler.GetPlayerBySlug)
+    r.POST("/players", playerHandler.CreatePlayer)
+    r.DELETE("/players/:id", playerHandler.DeletePlayer)
+
+    r.GET("/transactions", transactionHandler.GetTransactions)
+    r.POST("/transactions/buy", transactionHandler.BuyTransaction)
+    r.GET("/transactions/:id", transactionHandler.GetTransactionByID)
+    r.POST("/transactions/sell", transactionHandler.SellTransaction)
+    r.GET("/positions", transactionHandler.GetPositions)
+    r.GET("/users/:id/transactions", transactionHandler.GetTransactionsOfUser)
+    r.GET("/users/:id/positions", transactionHandler.GetPositionsOfUser)
+    r.GET("/players/:id/transactions", transactionHandler.GetTransactionsOfPlayer)
+    r.GET("/players/:id/positions", transactionHandler.GetPositionsOfPlayer)
     r.Run("0.0.0.0:8080")
 }
