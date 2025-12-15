@@ -96,7 +96,7 @@ func (r *PSQLTransactionRepo)  GetByUserID(ctx context.Context, id int64) ([]*mo
 
 
 func (r *PSQLTransactionRepo) GetByPlayerID(ctx context.Context, id int64) ([]*models.Transaction, error){
-	rows, err := r.Pool.Query(ctx, "SELECT id, user_id, asset_id, type, quantity, price, timestamp from transactions WHERE player_id=$1", id)
+	rows, err := r.Pool.Query(ctx, "SELECT id, user_id, asset_id, type, quantity, price, timestamp from transactions WHERE asset_id=$1", id)
 	defer rows.Close()
 	if err != nil {
 		return nil, err
@@ -195,7 +195,7 @@ func (r *PSQLTransactionRepo) GetPositionsByUserID(ctx context.Context, id int64
 
 func (r *PSQLTransactionRepo) GetPositionsByPlayerID(ctx context.Context, id int64) ([]*models.Position, error){
 	var positions []*models.Position
-	rows, err := r.Pool.Query(ctx, "SELECT user_id, asset_id, qty from positions_mv WHERE player_id=$1", id)
+	rows, err := r.Pool.Query(ctx, "SELECT user_id, asset_id, qty from positions_mv WHERE asset_id=$1", id)
 	defer rows.Close()
 	if err != nil {
 		return nil, err

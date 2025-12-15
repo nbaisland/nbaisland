@@ -257,7 +257,7 @@ func (h* Handler) GetTransactionsOfPlayer(c *gin.Context){
 	}
 	transactions, err := h.TransactionService.GetByPlayerID(ctx, id)
 	if err != nil {
-		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch transactions for player for id specified `%v`", id)})
+		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch transactions for player for id specified `%v`, %v", id, err)})
 		return
 	}
 	if transactions == nil {
@@ -395,7 +395,7 @@ func (h* Handler) GetPositionsOfPlayer(c *gin.Context){
 	}
 	positions, err := h.TransactionService.GetPositionsByPlayerID(ctx, id)
 	if err != nil {
-		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch positions for player for id specified `%v`", id)})
+		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch positions for player for id specified `%v`, %v", id, err)})
 		return
 	}
 	if positions == nil {
@@ -415,7 +415,7 @@ func (h* Handler) GetPositionsOfUser(c *gin.Context){
 	}
 	positions, err := h.TransactionService.GetPositionsByUserID(ctx, id)
 	if err != nil {
-		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch positions for user for id specified `%v`", id)})
+		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch positions for user for id specified `%v`, err", id, err)})
 		return
 	}
 	if positions == nil {

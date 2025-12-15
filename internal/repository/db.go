@@ -18,7 +18,6 @@ func NewDB(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	}
 
 
-	// FIGURE THIS OUT LATER...
 	cfg.MaxConns = 10
 	cfg.MinConns = 1
 	cfg.MaxConnLifetime = time.Hour
