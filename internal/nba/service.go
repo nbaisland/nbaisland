@@ -4,7 +4,6 @@ import (
     "context"
     "fmt"
     "log"
-    "time"
     
     "github.com/nbaisland/nbaisland/internal/utils"
     "github.com/jackc/pgx/v5/pgxpool"
@@ -200,10 +199,13 @@ func (s *NBAService) GetPlayerStats(ctx context.Context, playerID int, season st
     if err != nil {
         return nil, fmt.Errorf("failed to get weekly stats: %w", err)
     }
+
+    careerStats, err := s.repo.GetCareerStats(ctx, playerID)
     
     return &PlayerStatsResponse{
         SeasonStats: seasonStats,
         WeeklyStats: weeklyStats,
+        CareerStats: careerStats,
     }, nil
 }
 
@@ -321,10 +323,44 @@ func (s *NBAService) GetAppPlayerWithStats(ctx context.Context, appPlayerID int,
     return &result, nil
 }
 
+func (s *NBAService) UpdateAllCareerStats(ctx context.Context) error {
+    log.Printf("Starting career stats update...")
+    
+    allStats, err := s.client.GetAllPlayersCareerStats(ctx)
+    if err != nil {
+        return fmt.Errorf("failed to get career stats: %w", err)
+    }
+    
+    log.Printf("Retrieved career stats for %d players, saving to database...", len(allStats))
+    
+    batchSize := 50
+    for i := 0; i < len(allStats); i += batchSize {
+        end := i + batchSize
+        if end > len(allStats) {
+            end = len(allStats)
+        }
+        
+        batch := allStats[i:end]
+        if err := s.repo.BatchSaveCareerStats(ctx, batch); err != nil {
+            log.Printf("Warning: Failed to save batch starting at index %d: %v", i, err)
+            continue
+        }
+        
+        log.Printf("Saved batch: %d/%d players", end, len(allStats))
+    }
+    
+    log.Printf("Career stats update completed! Saved %d players", len(allStats))
+    return nil
+}
+
+func (s *NBAService) GetPlayerCareerStats(ctx context.Context, playerID int) (*PlayerCareerStats, error) {
+    return s.repo.GetCareerStats(ctx, playerID)
+}
 
 type PlayerStatsResponse struct {
     SeasonStats *PlayerSeasonStats
     WeeklyStats *WeeklyStats
+    CareerStats *PlayerCareerStats
 }
 
 type AppPlayerWithStats struct {

@@ -1,0 +1,58 @@
+package repository
+
+import (
+	"context"
+	"errors"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	// "github.com/nbaisland/nbaisland/internal/models"
+)
+
+type PlayerIDMapRepository interface {
+    UpdateEmail(ctx context.Context, id int64, email string) error
+    UpdateCurrency(ctx context.Context, id int64, currency float64) error
+    Delete(ctx context.Context, id int64) error
+}
+
+type PlayerMapRepo struct {
+    Pool *pgxpool.Pool
+}
+
+func (r *PlayerMapRepo) GetNBAPlayerByAppID(ctx context.Context, playerID int64) (int64, error) {
+	var nbaPlayerID int64
+
+	err := r.Pool.QueryRow(ctx,
+		"SELECT nba_player_id FROM player_nba_mapping WHERE player_id=$1",
+		playerID,
+	).Scan(&nbaPlayerID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, nil
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	return nbaPlayerID, nil
+}
+
+
+func (r *PlayerMapRepo) GetAppPlayerByNBAID(ctx context.Context, nbaID int64) (int64, error) {
+	var appPlayerID int64
+
+	err := r.Pool.QueryRow(ctx,
+		"SELECT player_id FROM player_nba_mapping WHERE nba_player_id=$1",
+		nbaID,
+	).Scan(&appPlayerID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, nil
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	return appPlayerID, nil
+}

@@ -378,3 +378,164 @@ func (r *Repository) BatchSaveWeeklyStats(ctx context.Context, allStats []Weekly
     
     return nil
 }
+
+func (r *Repository) SaveCareerStats(ctx context.Context, stats *PlayerCareerStats) error {
+    query := `
+        INSERT INTO nba_career_stats 
+            (player_id, games_played, points_per_game, rebounds_per_game, 
+             assists_per_game, steals_per_game, blocks_per_game, 
+             field_goal_pct, three_point_pct, free_throw_pct, minutes_per_game, updated_at,
+             points_total, rebounds_total, assists_total, steals_total, blocks_total, minutes_total)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14, $15, $16, $17)
+        ON CONFLICT (player_id) DO UPDATE SET
+            games_played = EXCLUDED.games_played,
+            points_per_game = EXCLUDED.points_per_game,
+            rebounds_per_game = EXCLUDED.rebounds_per_game,
+            assists_per_game = EXCLUDED.assists_per_game,
+            steals_per_game = EXCLUDED.steals_per_game,
+            blocks_per_game = EXCLUDED.blocks_per_game,
+            field_goal_pct = EXCLUDED.field_goal_pct,
+            three_point_pct = EXCLUDED.three_point_pct,
+            free_throw_pct = EXCLUDED.free_throw_pct,
+            minutes_per_game = EXCLUDED.minutes_per_game,
+            points_total = EXCLUDED.points_total,
+            rebounds_total = EXCLUDED.rebounds_total,
+            assists_total = EXCLUDED.assists_total,
+            steals_total = EXCLUDED.steals_total,
+            blocks_total = EXCLUDED.blocks_total,
+            minutes_total = EXCLUDED.minutes_total,
+            updated_at = NOW()
+    `
+    
+    _, err := r.pool.Exec(ctx, query,
+        stats.PlayerID,
+        stats.GamesPlayed,
+        stats.PointsPerGame,
+        stats.ReboundsPerGame,
+        stats.AssistsPerGame,
+        stats.StealsPerGame,
+        stats.BlocksPerGame,
+        stats.FieldGoalPct,
+        stats.ThreePointPct,
+        stats.FreeThrowPct,
+        stats.MinutesPerGame,
+        stats.PointsTotal,
+        stats.ReboundsTotal,
+        stats.AssistsTotal,
+        stats.StealsTotal,
+        stats.BlocksTotal,
+        stats.MinutesTotal,
+    )
+    
+    return err
+}
+
+func (r *Repository) GetCareerStats(ctx context.Context, playerID int) (*PlayerCareerStats, error) {
+    query := `
+        SELECT player_id, games_played, points_per_game, rebounds_per_game,
+               assists_per_game, steals_per_game, blocks_per_game,
+               field_goal_pct, three_point_pct, free_throw_pct, minutes_per_game
+        FROM nba_career_stats
+        WHERE player_id = $1
+    `
+    
+    var stats PlayerCareerStats
+    err := r.pool.QueryRow(ctx, query, playerID).Scan(
+        &stats.PlayerID,
+        &stats.GamesPlayed,
+        &stats.PointsPerGame,
+        &stats.ReboundsPerGame,
+        &stats.AssistsPerGame,
+        &stats.StealsPerGame,
+        &stats.BlocksPerGame,
+        &stats.FieldGoalPct,
+        &stats.ThreePointPct,
+        &stats.FreeThrowPct,
+        &stats.MinutesPerGame,
+        &stats.PointsTotal,
+        &stats.ReboundsTotal,
+        &stats.AssistsTotal,
+        &stats.StealsTotal,
+        &stats.BlocksTotal,
+        &stats.MinutesTotal,
+    )
+    
+    if err != nil {
+        if errors.Is(err, pgx.ErrNoRows) {
+            return nil, nil
+        }
+        return nil, err
+    }
+    
+    return &stats, nil
+}
+
+func (r *Repository) BatchSaveCareerStats(ctx context.Context, allStats []PlayerCareerStats) error {
+    if len(allStats) == 0 {
+        return nil
+    }
+    
+    tx, err := r.pool.Begin(ctx)
+    if err != nil {
+        return fmt.Errorf("failed to begin transaction: %w", err)
+    }
+    defer tx.Rollback(ctx)
+    
+    query := `
+        INSERT INTO nba_career_stats 
+            (player_id, games_played, points_per_game, rebounds_per_game, 
+             assists_per_game, steals_per_game, blocks_per_game, 
+             field_goal_pct, three_point_pct, free_throw_pct, minutes_per_game, updated_at,
+             points_total, rebounds_total, assists_total, steals_total, blocks_total, minutes_total)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14, $15, $16, $17)
+        ON CONFLICT (player_id) DO UPDATE SET
+            games_played = EXCLUDED.games_played,
+            points_per_game = EXCLUDED.points_per_game,
+            rebounds_per_game = EXCLUDED.rebounds_per_game,
+            assists_per_game = EXCLUDED.assists_per_game,
+            steals_per_game = EXCLUDED.steals_per_game,
+            blocks_per_game = EXCLUDED.blocks_per_game,
+            field_goal_pct = EXCLUDED.field_goal_pct,
+            three_point_pct = EXCLUDED.three_point_pct,
+            free_throw_pct = EXCLUDED.free_throw_pct,
+            minutes_per_game = EXCLUDED.minutes_per_game,
+            points_total = EXCLUDED.points_total,
+            rebounds_total = EXCLUDED.rebounds_total,
+            assists_total = EXCLUDED.assists_total,
+            steals_total = EXCLUDED.steals_total,
+            blocks_total = EXCLUDED.blocks_total,
+            minutes_total = EXCLUDED.minutes_total,
+            updated_at = NOW()
+    `
+    
+    for _, stats := range allStats {
+        _, err := tx.Exec(ctx, query,
+            stats.PlayerID,
+            stats.GamesPlayed,
+            stats.PointsPerGame,
+            stats.ReboundsPerGame,
+            stats.AssistsPerGame,
+            stats.StealsPerGame,
+            stats.BlocksPerGame,
+            stats.FieldGoalPct,
+            stats.ThreePointPct,
+            stats.FreeThrowPct,
+            stats.MinutesPerGame,
+            stats.PointsTotal,
+            stats.ReboundsTotal,
+            stats.AssistsTotal,
+            stats.StealsTotal,
+            stats.BlocksTotal,
+            stats.MinutesTotal,
+        )
+        if err != nil {
+            return fmt.Errorf("failed to insert career stats for player %d: %w", stats.PlayerID, err)
+        }
+    }
+    
+    if err := tx.Commit(ctx); err != nil {
+        return fmt.Errorf("failed to commit transaction: %w", err)
+    }
+    
+    return nil
+}

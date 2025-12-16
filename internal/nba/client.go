@@ -205,7 +205,6 @@ func (c *Client) GetAllPlayersSeasonStats(ctx context.Context, season string) ([
             allStats = append(allStats, *stats)
         }
         
-        // Rate limit delay
         time.Sleep(100 * time.Millisecond)
     }
     
@@ -275,4 +274,117 @@ func PrintWeeklyStats(stats WeeklyStats) {
     fmt.Printf("APG: %.1f (%d total)\n", stats.AssistsPerGame, stats.TotalAssists)
     fmt.Printf("SPG: %.1f (%d total)\n", stats.StealsPerGame, stats.TotalSteals)
     fmt.Printf("BPG: %.1f (%d total)\n", stats.BlocksPerGame, stats.TotalBlocks)
+}
+
+func (c *Client) GetPlayerCareerStats(ctx context.Context, playerID int, playerName string) (*PlayerCareerStats, error) {
+    playerString := fmt.Sprintf("%d", playerID)
+    
+    req := endpoints.PlayerCareerStatsRequest{
+        PlayerID: playerString,
+        PerMode:  parameters.PerModePerGame,
+        LeagueID: parameters.LeagueIDNBA,
+    }
+
+    
+    
+    resp, err := endpoints.PlayerCareerStats(ctx, c.statsClient, req)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get career stats for player %d: %w", playerID, err)
+    }
+    
+    if resp == nil || len(resp.Data.CareerTotalsRegularSeason) == 0 {
+        return nil, fmt.Errorf("no career stats found for player %d", playerID)
+    }
+    
+    careerData := resp.Data.CareerTotalsRegularSeason[0]
+
+    reqTotals := endpoints.PlayerCareerStatsRequest{
+        PlayerID: playerString,
+        PerMode:  parameters.PerModeTotals,
+        LeagueID: parameters.LeagueIDNBA,
+    }
+
+    resp, err = endpoints.PlayerCareerStats(ctx, c.statsClient, reqTotals)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get career stats for player %d: %w", playerID, err)
+    }
+    
+    if resp == nil || len(resp.Data.CareerTotalsRegularSeason) == 0 {
+        return nil, fmt.Errorf("no career stats found for player %d", playerID)
+    }
+    
+    careerDataTotals := resp.Data.CareerTotalsRegularSeason[0]
+    
+    return &PlayerCareerStats{
+        PlayerID:        playerID,
+        PlayerName:      playerName,
+        GamesPlayed:     careerData.GP,
+        PointsPerGame:   careerData.PTS,
+        ReboundsPerGame: careerData.REB,
+        AssistsPerGame:  careerData.AST,
+        StealsPerGame:   careerData.STL,
+        BlocksPerGame:   careerData.BLK,
+        FieldGoalPct:    careerData.FGPct,
+        ThreePointPct:   careerData.FG3Pct,
+        FreeThrowPct:    careerData.FTPct,
+        MinutesPerGame:  careerData.MIN,
+        PointsTotal:   careerDataTotals.PTS,
+        ReboundsTotal: careerDataTotals.REB,
+        AssistsTotal:  careerDataTotals.AST,
+        StealsTotal:   careerDataTotals.STL,
+        BlocksTotal:   careerDataTotals.BLK,
+        MinutesTotal:  careerDataTotals.MIN,
+    }, nil
+}
+
+func (c *Client) GetAllPlayersCareerStats(ctx context.Context) ([]PlayerCareerStats, error) {
+    players, err := c.GetActivePlayers()
+    if err != nil {
+        return nil, err
+    }
+    
+    fmt.Printf("Fetching career stats for %d players...\n", len(players))
+    
+    var allStats []PlayerCareerStats
+    
+    for i, player := range players {
+        if i%50 == 0 {
+            fmt.Printf("Progress: %d/%d players\n", i, len(players))
+        }
+        
+        stats, err := c.GetPlayerCareerStats(ctx, player.ID, player.FullName)
+        if err != nil {
+            fmt.Printf("Warning: Failed for player %s (ID: %d): %v\n", player.FullName, player.ID, err)
+            continue
+        }
+        
+        if stats.GamesPlayed > 0 {
+            allStats = append(allStats, *stats)
+        }
+        
+        time.Sleep(100 * time.Millisecond)
+    }
+    
+    fmt.Printf("Successfully retrieved career stats for %d players\n", len(allStats))
+    return allStats, nil
+}
+
+func PrintCareerStats(stats PlayerCareerStats) {
+    fmt.Printf("\n=== %s (ID: %d) - Career Stats ===\n", stats.PlayerName, stats.PlayerID)
+    fmt.Printf("Games Played: %d\n", stats.GamesPlayed)
+    fmt.Printf("PPG: %.1f\n", stats.PointsPerGame)
+    fmt.Printf("RPG: %.1f\n", stats.ReboundsPerGame)
+    fmt.Printf("APG: %.1f\n", stats.AssistsPerGame)
+    fmt.Printf("SPG: %.1f\n", stats.StealsPerGame)
+    fmt.Printf("BPG: %.1f\n", stats.BlocksPerGame)
+    fmt.Printf("FG%%: %.1f%%\n", stats.FieldGoalPct*100)
+    fmt.Printf("3P%%: %.1f%%\n", stats.ThreePointPct*100)
+    fmt.Printf("FT%%: %.1f%%\n", stats.FreeThrowPct*100)
+    fmt.Printf("MPG: %.1f\n", stats.MinutesPerGame)
+    fmt.Printf("Total Points: %.1f\n", stats.PointsTotal)
+    fmt.Printf("Total Rebounds: %.1f\n", stats.ReboundsTotal)
+    fmt.Printf("Total Assists: %.1f\n", stats.AssistsTotal)
+    fmt.Printf("Total Steals: %.1f\n", stats.StealsTotal)
+    fmt.Printf("Total Blocks: %.1f\n", stats.BlocksTotal)
+    fmt.Printf("Total Minutes: %.1f\n", stats.MinutesTotal)
 }

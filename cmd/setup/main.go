@@ -30,7 +30,7 @@ func main() {
     nbaClient := nba.NewClient()
     nbaRepo := nba.NewRepository(pool)
     nbaService := nba.NewNBAService(nbaClient, nbaRepo, pool)
-    
+
     ctx = context.Background()
     
     log.Println("Seeding players with 10+ games...")
@@ -42,6 +42,10 @@ func main() {
     if err := nbaService.UpdateAllSeasonStats(ctx, "2025-26"); err != nil {
         log.Fatalf("Season stats failed: %v", err)
     }
-    
+    log.Println("Loading career stats...")
+    if err := nbaService.UpdateAllCareerStats(ctx); err != nil {
+        log.Printf("Warning: Career stats failed: %v", err)
+    }
+
     log.Println("Setup complete!")
 }

@@ -11,6 +11,7 @@ import (
 type PlayerRepository interface {
     GetByID(ctx context.Context, id int64) (*models.Player, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Player, error)
+	GetCapacityByID(ctx context.Context, id int64) (int, error)
 	GetValueByID(ctx context.Context, id int64) (float64, error)
     GetAll(ctx context.Context) ([]*models.Player, error)
 	GetByIDs(ctx context.Context, ids []int64) ([]*models.Player, error)
@@ -102,6 +103,21 @@ func (r *PSQLPlayerRepo) GetValueByID(ctx context.Context, id int64) (float64, e
 	}
 
 	return value, nil
+}
+
+func (r *PSQLPlayerRepo) GetCapacityByID(ctx context.Context, id int64) (int, error) {
+	var capacity int
+	err := r.Pool.QueryRow(ctx, "SELECT capacity from players where id=$1", id).Scan(&capacity)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, nil
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	return capacity, nil
 }
 
 func (r *PSQLPlayerRepo) GetAll(ctx context.Context) ([]*models.Player, error){
