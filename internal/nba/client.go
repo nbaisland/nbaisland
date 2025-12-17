@@ -35,7 +35,7 @@ func (c *Client) GetActivePlayers() ([]static.Player, error) {
     return activePlayers, nil
 }
 
-func (c *Client) GetPlayerGameLog(ctx context.Context, playerID int, season string) ([]endpoints.GameLog, error) {
+func (c *Client) GetPlayerGameLog(ctx context.Context, playerID int64, season string) ([]endpoints.GameLog, error) {
     playerString := fmt.Sprintf("%d", playerID)
     
     req := endpoints.PlayerGameLogRequest{
@@ -53,7 +53,7 @@ func (c *Client) GetPlayerGameLog(ctx context.Context, playerID int, season stri
     return gameLogData, nil
 }
 
-func (c *Client) GetPlayerGameLogDateRange(ctx context.Context, playerID int, season string, dateFrom, dateTo time.Time) ([]endpoints.GameLog, error) {
+func (c *Client) GetPlayerGameLogDateRange(ctx context.Context, playerID int64, season string, dateFrom, dateTo time.Time) ([]endpoints.GameLog, error) {
     playerString := fmt.Sprintf("%d", playerID)
     
     dateFromStr := dateFrom.Format("01/02/2006")
@@ -77,7 +77,7 @@ func (c *Client) GetPlayerGameLogDateRange(ctx context.Context, playerID int, se
     return gameLogData, nil
 }
 
-func AggregateSeasonStats(playerID int, playerName string, season string, games []endpoints.GameLog) *PlayerSeasonStats {
+func AggregateSeasonStats(playerID int64, playerName string, season string, games []endpoints.GameLog) *PlayerSeasonStats {
     if len(games) == 0 {
         return &PlayerSeasonStats{
             PlayerID:   playerID,
@@ -116,7 +116,7 @@ func AggregateSeasonStats(playerID int, playerName string, season string, games 
     }
 }
 
-func AggregateWeeklyStats(playerID int, playerName string, season string, weekStart, weekEnd time.Time, games []endpoints.GameLog) *WeeklyStats {
+func AggregateWeeklyStats(playerID int64, playerName string, season string, weekStart, weekEnd time.Time, games []endpoints.GameLog) *WeeklyStats {
     if len(games) == 0 {
         return &WeeklyStats{
             PlayerID:   playerID,
@@ -159,7 +159,7 @@ func AggregateWeeklyStats(playerID int, playerName string, season string, weekSt
     }
 }
 
-func (c *Client) GetPlayerSeasonStats(ctx context.Context, playerID int, playerName string, season string) (*PlayerSeasonStats, error) {
+func (c *Client) GetPlayerSeasonStats(ctx context.Context, playerID int64, playerName string, season string) (*PlayerSeasonStats, error) {
     games, err := c.GetPlayerGameLog(ctx, playerID, season)
     if err != nil {
         return nil, err
@@ -168,7 +168,7 @@ func (c *Client) GetPlayerSeasonStats(ctx context.Context, playerID int, playerN
     return AggregateSeasonStats(playerID, playerName, season, games), nil
 }
 
-func (c *Client) GetPlayerWeeklyStats(ctx context.Context, playerID int, playerName string, season string) (*WeeklyStats, error) {
+func (c *Client) GetPlayerWeeklyStats(ctx context.Context, playerID int64, playerName string, season string) (*WeeklyStats, error) {
     weekEnd := time.Now()
     weekStart := weekEnd.AddDate(0, 0, -7)
     
@@ -195,7 +195,7 @@ func (c *Client) GetAllPlayersSeasonStats(ctx context.Context, season string) ([
             fmt.Printf("Progress: %d/%d players\n", i, len(players))
         }
         
-        stats, err := c.GetPlayerSeasonStats(ctx, player.ID, player.FullName, season)
+        stats, err := c.GetPlayerSeasonStats(ctx, int64(player.ID), player.FullName, season)
         if err != nil {
             fmt.Printf("Warning: Failed for player %s (ID: %d): %v\n", player.FullName, player.ID, err)
             continue
@@ -227,7 +227,7 @@ func (c *Client) GetAllPlayersWeeklyStats(ctx context.Context, season string) ([
             fmt.Printf("Progress: %d/%d players\n", i, len(players))
         }
         
-        stats, err := c.GetPlayerWeeklyStats(ctx, player.ID, player.FullName, season)
+        stats, err := c.GetPlayerWeeklyStats(ctx, int64(player.ID), player.FullName, season)
         if err != nil {
             fmt.Printf("Warning: Failed for player %s (ID: %d): %v\n", player.FullName, player.ID, err)
             continue
@@ -245,7 +245,7 @@ func (c *Client) GetAllPlayersWeeklyStats(ctx context.Context, season string) ([
     return allStats, nil
 }
 
-func (c *Client) GetCustomDateRangeStats(ctx context.Context, playerID int, playerName string, season string, dateFrom, dateTo time.Time) (*WeeklyStats, error) {
+func (c *Client) GetCustomDateRangeStats(ctx context.Context, playerID int64, playerName string, season string, dateFrom, dateTo time.Time) (*WeeklyStats, error) {
     games, err := c.GetPlayerGameLogDateRange(ctx, playerID, season, dateFrom, dateTo)
     if err != nil {
         return nil, err
@@ -276,7 +276,7 @@ func PrintWeeklyStats(stats WeeklyStats) {
     fmt.Printf("BPG: %.1f (%d total)\n", stats.BlocksPerGame, stats.TotalBlocks)
 }
 
-func (c *Client) GetPlayerCareerStats(ctx context.Context, playerID int, playerName string) (*PlayerCareerStats, error) {
+func (c *Client) GetPlayerCareerStats(ctx context.Context, playerID int64, playerName string) (*PlayerCareerStats, error) {
     playerString := fmt.Sprintf("%d", playerID)
     
     req := endpoints.PlayerCareerStatsRequest{
@@ -352,7 +352,7 @@ func (c *Client) GetAllPlayersCareerStats(ctx context.Context) ([]PlayerCareerSt
             fmt.Printf("Progress: %d/%d players\n", i, len(players))
         }
         
-        stats, err := c.GetPlayerCareerStats(ctx, player.ID, player.FullName)
+        stats, err := c.GetPlayerCareerStats(ctx, int64(player.ID), player.FullName)
         if err != nil {
             fmt.Printf("Warning: Failed for player %s (ID: %d): %v\n", player.FullName, player.ID, err)
             continue

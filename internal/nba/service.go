@@ -39,7 +39,7 @@ func (s *NBAService) UpdateAllSeasonStats(ctx context.Context, season string) er
         }
         
         err := s.repo.UpsertPlayer(ctx, &Player{
-            ID:        player.ID,
+            ID:        int64(player.ID),
             FullName:  player.FullName,
             FirstName: player.FirstName,
             LastName:  player.LastName,
@@ -116,7 +116,7 @@ func (s *NBAService) UpdateAllWeeklyStats(ctx context.Context, season string) er
     return nil
 }
 
-func (s *NBAService) UpdatePlayerSeasonStats(ctx context.Context, playerID int, season string) error {
+func (s *NBAService) UpdatePlayerSeasonStats(ctx context.Context, playerID int64, season string) error {
     players, err := s.client.GetActivePlayers()
     if err != nil {
         return fmt.Errorf("failed to get players: %w", err)
@@ -124,11 +124,11 @@ func (s *NBAService) UpdatePlayerSeasonStats(ctx context.Context, playerID int, 
     
     var playerName string
     for _, p := range players {
-        if p.ID == playerID {
+        if int64(p.ID) == playerID {
             playerName = p.FullName
             
             err := s.repo.UpsertPlayer(ctx, &Player{
-                ID:        p.ID,
+                ID:        int64(p.ID),
                 FullName:  p.FullName,
                 FirstName: p.FirstName,
                 LastName:  p.LastName,
@@ -158,7 +158,7 @@ func (s *NBAService) UpdatePlayerSeasonStats(ctx context.Context, playerID int, 
     return nil
 }
 
-func (s *NBAService) UpdatePlayerWeeklyStats(ctx context.Context, playerID int, season string) error {
+func (s *NBAService) UpdatePlayerWeeklyStats(ctx context.Context, playerID int64, season string) error {
     players, err := s.client.GetActivePlayers()
     if err != nil {
         return fmt.Errorf("failed to get players: %w", err)
@@ -166,7 +166,7 @@ func (s *NBAService) UpdatePlayerWeeklyStats(ctx context.Context, playerID int, 
     
     var playerName string
     for _, p := range players {
-        if p.ID == playerID {
+        if int64(p.ID) == playerID {
             playerName = p.FullName
             break
         }
@@ -189,7 +189,7 @@ func (s *NBAService) UpdatePlayerWeeklyStats(ctx context.Context, playerID int, 
     return nil
 }
 
-func (s *NBAService) GetPlayerStats(ctx context.Context, playerID int, season string) (*PlayerStatsResponse, error) {
+func (s *NBAService) GetPlayerStats(ctx context.Context, playerID int64, season string) (*PlayerStatsResponse, error) {
     seasonStats, err := s.repo.GetSeasonStats(ctx, playerID, season)
     if err != nil {
         return nil, fmt.Errorf("failed to get season stats: %w", err)
@@ -353,7 +353,7 @@ func (s *NBAService) UpdateAllCareerStats(ctx context.Context) error {
     return nil
 }
 
-func (s *NBAService) GetPlayerCareerStats(ctx context.Context, playerID int) (*PlayerCareerStats, error) {
+func (s *NBAService) GetPlayerCareerStats(ctx context.Context, playerID int64) (*PlayerCareerStats, error) {
     return s.repo.GetCareerStats(ctx, playerID)
 }
 

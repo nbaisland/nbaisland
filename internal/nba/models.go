@@ -3,7 +3,7 @@ package nba
 import "time"
 
 type Player struct {
-    ID         int
+    ID         int64
     FullName   string
     FirstName  string
     LastName   string
@@ -13,7 +13,7 @@ type Player struct {
 }
 
 type PlayerSeasonStats struct {
-    PlayerID        int
+    PlayerID        int64
     PlayerName      string
     Season          string
     GamesPlayed     int
@@ -30,7 +30,7 @@ type PlayerSeasonStats struct {
 }
 
 type WeeklyStats struct {
-    PlayerID        int
+    PlayerID        int64
     PlayerName      string
     WeekStart       time.Time
     WeekEnd         time.Time
@@ -49,7 +49,7 @@ type WeeklyStats struct {
 }
 
 type PlayerCareerStats struct {
-    PlayerID        int
+    PlayerID        int64
     PlayerName      string
     GamesPlayed     int
     PointsPerGame   float64

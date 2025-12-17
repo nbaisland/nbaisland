@@ -148,7 +148,7 @@ func (r *Repository) SaveWeeklyStats(ctx context.Context, stats *WeeklyStats) er
     return err
 }
 
-func (r *Repository) GetSeasonStats(ctx context.Context, playerID int, season string) (*PlayerSeasonStats, error) {
+func (r *Repository) GetSeasonStats(ctx context.Context, playerID int64, season string) (*PlayerSeasonStats, error) {
     query := `
         SELECT player_id, season, games_played, total_points, total_rebounds,
                total_assists, total_steals, total_blocks, points_per_game,
@@ -184,7 +184,7 @@ func (r *Repository) GetSeasonStats(ctx context.Context, playerID int, season st
     return &stats, nil
 }
 
-func (r *Repository) GetLatestWeeklyStats(ctx context.Context, playerID int) (*WeeklyStats, error) {
+func (r *Repository) GetLatestWeeklyStats(ctx context.Context, playerID int64) (*WeeklyStats, error) {
     query := `
         SELECT player_id, season, week_start, week_end, games_played,
                total_points, total_rebounds, total_assists, total_steals, total_blocks,
@@ -430,11 +430,12 @@ func (r *Repository) SaveCareerStats(ctx context.Context, stats *PlayerCareerSta
     return err
 }
 
-func (r *Repository) GetCareerStats(ctx context.Context, playerID int) (*PlayerCareerStats, error) {
+func (r *Repository) GetCareerStats(ctx context.Context, playerID int64) (*PlayerCareerStats, error) {
     query := `
         SELECT player_id, games_played, points_per_game, rebounds_per_game,
                assists_per_game, steals_per_game, blocks_per_game,
-               field_goal_pct, three_point_pct, free_throw_pct, minutes_per_game
+               field_goal_pct, three_point_pct, free_throw_pct, minutes_per_game,
+               points_total, rebounds_total, assists_total, steals_total, blocks_total, minutes_total
         FROM nba_career_stats
         WHERE player_id = $1
     `

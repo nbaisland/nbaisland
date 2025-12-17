@@ -13,6 +13,9 @@ type PlayerRepository interface {
 	GetBySlug(ctx context.Context, slug string) (*models.Player, error)
 	GetCapacityByID(ctx context.Context, id int64) (int, error)
 	GetValueByID(ctx context.Context, id int64) (float64, error)
+	UpdateValue(ctx context.Context, id int64, v float64) error
+	UpdateAllValues(ctx context.Context, updates map[int64]float64) error
+	GetAllIDs(ctx context.Context) ([]int64, error)
     GetAll(ctx context.Context) ([]*models.Player, error)
 	GetByIDs(ctx context.Context, ids []int64) ([]*models.Player, error)
     Create(ctx context.Context, u *models.Player) error
@@ -145,6 +148,31 @@ func (r *PSQLPlayerRepo) GetAll(ctx context.Context) ([]*models.Player, error){
 	return players, nil
 }
 
+func (r *PSQLPlayerRepo) GetAllIDs(ctx context.Context) ([]int64, error) {
+	rows, err := r.Pool.Query(ctx, `SELECT id FROM players`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	ids := make([]int64, 0, 512)
+
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return ids, nil
+}
+
+
 func (r *PSQLPlayerRepo) Create(ctx context.Context, p *models.Player) error {
 	_, err := r.Pool.Exec(ctx, "INSERT INTO players (name, value, capacity) VALUES ($1, $2, $3)", p.Name, p.Value, p.Capacity)
 	return err
@@ -158,6 +186,27 @@ func (r *PSQLPlayerRepo) Update(ctx context.Context, p *models.Player) error {
 func (r *PSQLPlayerRepo) UpdateValue(ctx context.Context, id int64, v float64) error {
 	_, err := r.Pool.Exec(ctx, "UPDATE players SET value=$1 WHERE id=$2", v, id)
 	return err
+}
+
+func (r *PSQLPlayerRepo) UpdateAllValues(ctx context.Context, updates map[int64]float64) error {
+	tx, err := r.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	for id, v := range updates {
+		_, err := tx.Exec(ctx, `
+			UPDATE players
+			SET value = $1
+			WHERE id = $2
+		`, v, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *PSQLPlayerRepo) UpdateCapacity(ctx context.Context, id int64, c float64) error {

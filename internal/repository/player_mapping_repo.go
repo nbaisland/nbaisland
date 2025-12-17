@@ -9,9 +9,8 @@ import (
 )
 
 type PlayerIDMapRepository interface {
-    UpdateEmail(ctx context.Context, id int64, email string) error
-    UpdateCurrency(ctx context.Context, id int64, currency float64) error
-    Delete(ctx context.Context, id int64) error
+	GetNBAPlayerByAppID(ctx context.Context, playerID int64) (int64, error)
+	GetAppPlayerByNBAID(ctx context.Context, nbaID int64) (int64, error)
 }
 
 type PlayerMapRepo struct {
