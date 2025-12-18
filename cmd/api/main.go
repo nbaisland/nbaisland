@@ -17,6 +17,7 @@ import (
     "github.com/nbaisland/nbaisland/internal/api"
     "github.com/nbaisland/nbaisland/internal/nba"
     "github.com/nbaisland/nbaisland/internal/scheduler"
+    "github.com/nbaisland/nbaisland/internal/middleware"
 )
 
 func main() {
@@ -50,6 +51,7 @@ func main() {
     TransactionService := service.NewTransactionService(transactionRepo, playerRepo, userRepo)
     HealthService := service.NewHealthService(pool)
 
+    AuthHandler := &api.AuthHandler{UserService: UserService}
     userHandler := &api.UserHandler{UserService: UserService}
     playerHandler := &api.PlayerHandler{PlayerService: PlayerService}
     transactionHandler := &api.TransactionHandler{TransactionService: TransactionService}
@@ -68,8 +70,6 @@ func main() {
         log.Println("Running scheduled season NBA stats update...")
         return nbaService.UpdateAllSeasonStats(ctx, "2025-2026")
     })
-
-    // TODO : Need to add career stats..
 
     appCtx, appCancel := context.WithCancel(context.Background())
     defer appCancel()
@@ -91,29 +91,40 @@ func main() {
     r.GET("/health", healthHandler.CheckHealth)
     r.GET("/ready", healthHandler.CheckReady)
 
+    r.POST("/auth/register", AuthHandler.Register)
+    r.POST("/auth/login", AuthHandler.Login)
+
     r.GET("/users", userHandler.GetUsers)
     r.GET("/users/:id", userHandler.GetUserByID)
-    r.GET("/users/username/:username", userHandler.GetUserByUserName)
-    r.POST("/users", userHandler.CreateUser)
-    r.DELETE("/users/:id", userHandler.DeleteUser)
-
-
+    r.GET("/users/username/:username", userHandler.GetUserByUsername)
 
     r.GET("/players", playerHandler.GetPlayersByID)
     r.GET("/players/:id", playerHandler.GetPlayerByID)
     r.GET("/players/name/:slug", playerHandler.GetPlayerBySlug)
-    r.POST("/players", playerHandler.CreatePlayer)
-    r.DELETE("/players/:id", playerHandler.DeletePlayer)
 
-    r.GET("/transactions", transactionHandler.GetTransactions)
-    r.POST("/transactions/buy", transactionHandler.BuyTransaction)
-    r.GET("/transactions/:id", transactionHandler.GetTransactionByID)
-    r.POST("/transactions/sell", transactionHandler.SellTransaction)
-    r.GET("/positions", transactionHandler.GetPositions)
-    r.GET("/users/:id/transactions", transactionHandler.GetTransactionsOfUser)
-    r.GET("/users/:id/positions", transactionHandler.GetPositionsOfUser)
-    r.GET("/players/:id/transactions", transactionHandler.GetTransactionsOfPlayer)
-    r.GET("/players/:id/positions", transactionHandler.GetPositionsOfPlayer)
+    api := r.Group("/api")
+    api.Use(middleware.AuthMiddleware())
+    {
+        api.GET("/auth/me", AuthHandler.GetCurrentUser)
+        // api.POST("/auth/logout", AuthHandler.Logout)
+
+        api.DELETE("/users/:id", userHandler.DeleteUser)
+
+        api.POST("/players", playerHandler.CreatePlayer)
+        api.DELETE("/players/:id", playerHandler.DeletePlayer)
+
+        api.GET("/transactions", transactionHandler.GetTransactions)
+        api.POST("/transactions/buy", transactionHandler.BuyTransaction)
+        api.POST("/transactions/sell", transactionHandler.SellTransaction)
+        api.GET("/transactions/:id", transactionHandler.GetTransactionByID)
+
+        api.GET("/positions", transactionHandler.GetPositions)
+
+        api.GET("/users/:id/transactions", transactionHandler.GetTransactionsOfUser)
+        api.GET("/users/:id/positions", transactionHandler.GetPositionsOfUser)
+        api.GET("/players/:id/transactions", transactionHandler.GetTransactionsOfPlayer)
+        api.GET("/players/:id/positions", transactionHandler.GetPositionsOfPlayer)
+    }
 
     go func() {
         if err := r.Run("0.0.0.0:8080"); err != nil {

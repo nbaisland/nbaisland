@@ -3,8 +3,6 @@ package service
 import ( 
 	"context"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/nbaisland/nbaisland/internal/models"
     "github.com/nbaisland/nbaisland/internal/repository"
 )
@@ -25,31 +23,12 @@ func(s *UserService) GetByID(ctx context.Context, id int64) (*models.User, error
 	return s.Repo.GetByID(ctx, id)
 }
 
-func(s *UserService) GetByUserName(ctx context.Context, userName string) (*models.User, error) {
-	return s.Repo.GetByUserName(ctx, userName)
+func(s *UserService) GetByUsername(ctx context.Context, username string) (*models.User, error) {
+	return s.Repo.GetByUsername(ctx, username)
 }
 
-func(s *UserService) CreateUser(ctx context.Context, name string, userName string, email string, password string) (*models.User, error) {
-	// TODO: Validate password length etc ..
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	hashedStr := string(hashedPassword)
-	const startingCurrency float64 = 100
-	if err != nil {
-		return nil, err
-	}
-	u := &models.User{
-		Name: name,
-		UserName: userName,
-		Email: email,
-		Password: hashedStr,
-		Currency: startingCurrency,
-	}
-	err = s.Repo.Create(ctx, u)
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-
+func(s *UserService) CreateUser(ctx context.Context, u *models.User) (error) {
+	return s.Repo.Create(ctx, u)
 }
 
 func(s *UserService) DeleteUser(ctx context.Context, id int64) error {

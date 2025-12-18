@@ -5,22 +5,10 @@ import (
 	"strconv"
 	"net/http"
 	"github.com/gin-gonic/gin"
+	"github.com/nbaisland/nbaisland/internal/auth"
 	"github.com/nbaisland/nbaisland/internal/service"
 )
 
-type CreateUserRequest struct {
-	Name    string `json:"name"`
-	UserName    string `json:"userName"`
-	Email    string `json:"email"`
-	Password    string `json:"password"`
-}
-
-type CreatedUserResponse struct {
-	ID    int64 `json:"id`
-	Name    string `json:"name`
-	UserName    string `json:"userName"`
-	Email    string `json:"email`
-}
 
 type UserHandler struct {
 	UserService *service.UserService
@@ -57,16 +45,16 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 }
 
 
-func (h *UserHandler) GetUserByUserName(c *gin.Context) {
+func (h *UserHandler) GetUserByUsername(c *gin.Context) {
 	ctx := c.Request.Context()
-	userName := c.Param("username")
-	if userName == "" {
+	username := c.Param("username")
+	if username == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"Error" : "Provide a username"})
 		return
 	}
-	user, err := h.UserService.GetByUserName(ctx, userName)
+	user, err := h.UserService.GetByUsername(ctx, username)
 	if err != nil {
-		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch user for username specified `%v`, %v", userName, err)})
+		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch user for username specified `%v`, %v", username, err)})
 		return
 	}
 	if user == nil {
@@ -76,44 +64,34 @@ func (h *UserHandler) GetUserByUserName(c *gin.Context) {
 	c.JSON(200, user)
 }
 
-func (h *UserHandler) CreateUser(c *gin.Context) {
-	var req CreateUserRequest
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": fmt.Sprintf("Invalid request: %v", err),
-		})
-		return
-	}
-	user, err := h.UserService.CreateUser(c.Request.Context(), req.Name, req.UserName, req.Email, req.Password)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error" : fmt.Sprintf("Failed to create user: %v", err),
-		})
-		return
-	}
-	res := CreatedUserResponse{
-		ID: user.ID,
-		UserName: user.UserName,
-		Name: user.Name,
-		Email: user.Email,
-	}
-	c.JSON(http.StatusOK, res)
-}
-
 func (h *UserHandler) DeleteUser(c *gin.Context) {
+	claimsAny, ok := c.Get("user")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	claims := claimsAny.(*auth.Claims)
+
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error" : "Provide a valid id",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Provide a valid id"})
+		return
 	}
+
+	if claims.UserID != int64(id) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You can only delete your own account.. nice try"})
+		return
+	}
+
 	err = h.UserService.DeleteUser(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error" : fmt.Sprintf("Could not delete user: %v", err),
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Could not delete user: %v", err),
 		})
 		return
 	}
-	c.JSON(http.StatusOK, id)
+
+	c.JSON(http.StatusOK, gin.H{"deleted_user_id": id})
 }
