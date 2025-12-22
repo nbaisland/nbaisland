@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"net/http"
 	"github.com/gin-gonic/gin"
@@ -11,7 +12,7 @@ import (
 type TransactionRequest struct {
 	PlayerID    int64  `json:"player_id"`
 	UserID    int64  `json:"user_id"`
-	Quantity    float64  `json:"quantity"`
+	Quantity    int  `json:"quantity"`
 }
 
 type TransactionHandler struct {
@@ -120,13 +121,10 @@ func (h *TransactionHandler) SellTransaction(c *gin.Context) {
    proceeds, err := h.TransactionService.Sell(ctx, req.UserID, req.PlayerID, req.Quantity)
    if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error" : fmt.Sprintf("Could not process trade: %v", err)})
+		return
    }
    c.JSON(http.StatusOK, gin.H{"proceeds" : proceeds})
 }
-
-// func (h *TransactionHandler) PreviewTransaction(c *gin.Context) {
-// 	// would be cool to do a transaction preview
-// }
 
 func (h *TransactionHandler) GetPositions(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -152,10 +150,10 @@ func (h *TransactionHandler) GetPositionsOfPlayer(c *gin.Context){
 		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch positions for player for id specified `%v`, %v", id, err)})
 		return
 	}
-	if positions == nil {
-		c.JSON(http.StatusNotFound, gin.H{"message" : "No positions found for player"})
-		return
-	}
+	// if positions == nil {
+	// 	c.JSON(http.StatusNotFound, gin.H{"message" : "No positions found for player"})
+	// 	return
+	// }
 	c.JSON(200, positions)
 }
 
@@ -172,10 +170,10 @@ func (h *TransactionHandler) GetPositionsOfUser(c *gin.Context){
 		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch positions for user for id specified `%v`, err", id, err)})
 		return
 	}
-	if positions == nil {
-		c.JSON(http.StatusNotFound, gin.H{"message" : "No positions found for user"})
-		return
-	}
+	// if positions == nil {
+	// 	c.JSON(http.StatusNotFound, gin.H{"message" : "No positions found for user"})
+	// 	return
+	// }
 	c.JSON(200, positions)
 
 }

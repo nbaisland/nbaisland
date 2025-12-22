@@ -88,8 +88,8 @@ func (r *PSQLUserRepo) GetAll(ctx context.Context) ([]*models.User, error){
 }
 
 func (r *PSQLUserRepo) Create(ctx context.Context, u *models.User) error {
-	err := r.Pool.QueryRow(ctx, "INSERT INTO users (name, username, email, currency, password) VALUES ($1, $2, $3, $4) RETURNING id",
-	u.Name, u.Username, u.Email, u.Currency, u.Password,
+	err := r.Pool.QueryRow(ctx, "INSERT INTO users (name, username, email, currency, password) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+	u.Username, u.Username, u.Email, u.Currency, u.Password,
 	).Scan(&u.ID)
 	return err
 }

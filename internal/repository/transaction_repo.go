@@ -132,10 +132,11 @@ func (r *PSQLTransactionRepo) Delete(ctx context.Context, id int64) error {
 
 func (r *PSQLTransactionRepo) GetPositionsByUserIDAndPlayerID(ctx context.Context, user_id int64, player_id int64) (*models.Position, error) {
 	var p = &models.Position{}
-	err := r.Pool.QueryRow(ctx, "SELECT user_id, asset_id, qty from positions_mv where user_id=$1 AND asset_id=$2", user_id, player_id).Scan(
+	err := r.Pool.QueryRow(ctx, "SELECT user_id, asset_id, quantity, average_cost from positions_mv where user_id=$1 AND asset_id=$2", user_id, player_id).Scan(
 		&p.UserID,
 		&p.AssetID,
 		&p.Quantity,
+		&p.AverageCost,
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -151,7 +152,7 @@ func (r *PSQLTransactionRepo) GetPositionsByUserIDAndPlayerID(ctx context.Contex
 
 func (r *PSQLTransactionRepo) GetAllPositions(ctx context.Context) ([]*models.Position, error){
 	var positions []*models.Position
-	rows, err := r.Pool.Query(ctx, "SELECT user_id, asset_id, qty from positions_mv")
+	rows, err := r.Pool.Query(ctx, "SELECT user_id, asset_id, quantity, average_cost from positions_mv")
 	defer rows.Close()
 	if err != nil {
 		return nil, err
@@ -162,6 +163,7 @@ func (r *PSQLTransactionRepo) GetAllPositions(ctx context.Context) ([]*models.Po
 			&p.UserID,
 			&p.AssetID,
 			&p.Quantity,
+			&p.AverageCost,
 		)
 		if err != nil {
 			return nil, err
@@ -173,7 +175,7 @@ func (r *PSQLTransactionRepo) GetAllPositions(ctx context.Context) ([]*models.Po
 
 func (r *PSQLTransactionRepo) GetPositionsByUserID(ctx context.Context, id int64) ([]*models.Position, error){
 	var positions []*models.Position
-	rows, err := r.Pool.Query(ctx, "SELECT user_id, asset_id, qty from positions_mv WHERE user_id=$1", id)
+	rows, err := r.Pool.Query(ctx, "SELECT user_id, asset_id, quantity, average_cost from positions_mv WHERE user_id=$1", id)
 	defer rows.Close()
 	if err != nil {
 		return nil, err
@@ -184,6 +186,7 @@ func (r *PSQLTransactionRepo) GetPositionsByUserID(ctx context.Context, id int64
 			&p.UserID,
 			&p.AssetID,
 			&p.Quantity,
+			&p.AverageCost,
 		)
 		if err != nil {
 			return nil, err
@@ -195,7 +198,7 @@ func (r *PSQLTransactionRepo) GetPositionsByUserID(ctx context.Context, id int64
 
 func (r *PSQLTransactionRepo) GetPositionsByPlayerID(ctx context.Context, id int64) ([]*models.Position, error){
 	var positions []*models.Position
-	rows, err := r.Pool.Query(ctx, "SELECT user_id, asset_id, qty from positions_mv WHERE asset_id=$1", id)
+	rows, err := r.Pool.Query(ctx, "SELECT user_id, asset_id, quantity, average_cost from positions_mv WHERE asset_id=$1", id)
 	defer rows.Close()
 	if err != nil {
 		return nil, err
@@ -206,6 +209,7 @@ func (r *PSQLTransactionRepo) GetPositionsByPlayerID(ctx context.Context, id int
 			&p.UserID,
 			&p.AssetID,
 			&p.Quantity,
+			&p.AverageCost,
 		)
 		if err != nil {
 			return nil, err
@@ -216,7 +220,7 @@ func (r *PSQLTransactionRepo) GetPositionsByPlayerID(ctx context.Context, id int
 }
 
 func (r *PSQLTransactionRepo) RefreshPositionsMV(ctx context.Context) error {
-    _, err := r.Pool.Exec(ctx, "REFRESH MATERIALIZED VIEW CONCURRENTLY positions_mv")
+    _, err := r.Pool.Exec(ctx, "REFRESH MATERIALIZED VIEW positions_mv")
     if err != nil {
         return err
     }

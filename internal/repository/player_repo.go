@@ -15,6 +15,7 @@ type PlayerRepository interface {
 	GetValueByID(ctx context.Context, id int64) (float64, error)
 	UpdateValue(ctx context.Context, id int64, v float64) error
 	UpdateAllValues(ctx context.Context, updates map[int64]float64) error
+	UpdateCapacity(ctx context.Context, id int64, c int) error
 	GetAllIDs(ctx context.Context) ([]int64, error)
     GetAll(ctx context.Context) ([]*models.Player, error)
 	GetByIDs(ctx context.Context, ids []int64) ([]*models.Player, error)
@@ -209,7 +210,7 @@ func (r *PSQLPlayerRepo) UpdateAllValues(ctx context.Context, updates map[int64]
 	return tx.Commit(ctx)
 }
 
-func (r *PSQLPlayerRepo) UpdateCapacity(ctx context.Context, id int64, c float64) error {
+func (r *PSQLPlayerRepo) UpdateCapacity(ctx context.Context, id int64, c int) error {
 	_, err := r.Pool.Exec(ctx, "UPDATE players SET capacity=$1 WHERE id=$2", c, id)
 	return err
 }

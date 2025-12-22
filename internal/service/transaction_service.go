@@ -45,7 +45,7 @@ func (s *TransactionService) GetByPlayerID(ctx context.Context, id int64) ([]*mo
 	return t, err
 }
 
-func (s *TransactionService) Buy(ctx context.Context, userID int64, playerID int64, quantity float64) (error) {
+func (s *TransactionService) Buy(ctx context.Context, userID int64, playerID int64, quantity int) (error) {
 	userDetail, err := s.UserRepo.GetByID(ctx, userID)
 	if err != nil {
 		return err
@@ -66,11 +66,17 @@ func (s *TransactionService) Buy(ctx context.Context, userID int64, playerID int
 			Msg: "Could not find player",
 		}
 	}
-	cost := float64(playerDetail.Value) * quantity
+	cost := float64(playerDetail.Value) * float64(quantity)
 	if cost > userDetail.Currency {
 		return &TransactionError{
 			Code: "USER_LACKS_MONEY",
 			Msg: fmt.Sprintf("This trade would cost %v, user only has %v", cost, userDetail.Currency),
+		}
+	}
+	if quantity > playerDetail.Capacity {
+		return &TransactionError{
+			Code: "NO_CAPACITY",
+			Msg: fmt.Sprintf("Player only has %v capacity remaining, exceeding %v requested", playerDetail.Capacity, quantity),
 		}
 	}
 	// TODO: Check for capacity or something
@@ -98,7 +104,7 @@ func (s *TransactionService) Buy(ctx context.Context, userID int64, playerID int
 	return nil
 }
 
-func (s *TransactionService) Sell(ctx context.Context, userID int64, playerID int64, quantity float64) (float64, error) {
+func (s *TransactionService) Sell(ctx context.Context, userID int64, playerID int64, quantity int) (float64, error) {
     if quantity <= 0 {
         return 0, &TransactionError{
             Code: "QUANTITY_INVALID",
@@ -125,7 +131,7 @@ func (s *TransactionService) Sell(ctx context.Context, userID int64, playerID in
             Msg:  fmt.Sprintf("Request to sell %v exceeds held position (%v)", quantity, position.Quantity),
         }
     }
-    totalValue := quantity * playerDetail.Value
+    totalValue := float64(quantity) * playerDetail.Value
 	sellT := &models.Transaction{
         UserID:   userID,
         AssetID:  playerID,
@@ -143,7 +149,7 @@ func (s *TransactionService) Sell(ctx context.Context, userID int64, playerID in
 	newCurrencyValue := userDetail.Currency + totalValue
 	s.UserRepo.UpdateCurrency(ctx, userID, newCurrencyValue)
 	// TODO: Update capacity... 
-	// err := s.PlayerRepo
+	s.PlayerRepo.UpdateCapacity(ctx, playerID, quantity)
     err = s.TransactionRepo.RefreshPositionsMV(ctx)
 	if err != nil {
 		return totalValue, err

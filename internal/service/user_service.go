@@ -2,7 +2,7 @@ package service
 
 import ( 
 	"context"
-
+	"log"
 	"github.com/nbaisland/nbaisland/internal/models"
     "github.com/nbaisland/nbaisland/internal/repository"
 )
@@ -28,7 +28,11 @@ func(s *UserService) GetByUsername(ctx context.Context, username string) (*model
 }
 
 func(s *UserService) CreateUser(ctx context.Context, u *models.User) (error) {
-	return s.Repo.Create(ctx, u)
+	err := s.Repo.Create(ctx, u)
+	if err != nil {
+		log.Printf("Error: %v", err)
+	}
+	return err
 }
 
 func(s *UserService) DeleteUser(ctx context.Context, id int64) error {

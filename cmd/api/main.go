@@ -94,17 +94,18 @@ func main() {
     r.POST("/auth/register", AuthHandler.Register)
     r.POST("/auth/login", AuthHandler.Login)
 
-    r.GET("/users", userHandler.GetUsers)
-    r.GET("/users/:id", userHandler.GetUserByID)
-    r.GET("/users/username/:username", userHandler.GetUserByUsername)
 
-    r.GET("/players", playerHandler.GetPlayersByID)
-    r.GET("/players/:id", playerHandler.GetPlayerByID)
-    r.GET("/players/name/:slug", playerHandler.GetPlayerBySlug)
 
     api := r.Group("/api")
     api.Use(middleware.AuthMiddleware())
     {
+        api.GET("/users", userHandler.GetUsers)
+        api.GET("/users/:id", userHandler.GetUserByID)
+        api.GET("/users/username/:username", userHandler.GetUserByUsername)
+
+        api.GET("/players", playerHandler.GetPlayersByID)
+        api.GET("/players/:id", playerHandler.GetPlayerByID)
+        api.GET("/players/name/:slug", playerHandler.GetPlayerBySlug)
         api.GET("/auth/me", AuthHandler.GetCurrentUser)
         // api.POST("/auth/logout", AuthHandler.Logout)
 

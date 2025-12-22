@@ -51,7 +51,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	hashedPassword, err := auth.HashPassword(req.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user, password issue"})
 		return
 	}
 
