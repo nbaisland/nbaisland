@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"strconv"
 	"net/http"
 	"github.com/gin-gonic/gin"
