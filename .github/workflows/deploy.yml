@@ -21,7 +21,7 @@ jobs:
       - name: Build application
         run: |
           go mod download
-          go build -o nbaisland-backend
+          go build -o nbaisland-backend ./cmd/api
 
       - name: Stop existing service
         run: |
