@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, linux, arm64, backend]
+    runs-on: [self-hosted, linux, arm64]
     
     steps:
       - name: Checkout code
