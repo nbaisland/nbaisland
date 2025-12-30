@@ -12,7 +12,8 @@ type Config struct {
 	DBPassword  string
 	DBName      string
 	DBPort      string
-	DBSSLMODE      string
+	DBSSLMODE   string
+	CORSOrigin  string
 
 	ServerPort  string
 }
@@ -29,7 +30,8 @@ func Load() *Config {
         DBPassword: getEnv("DB_PASS", ""),
         DBName:     getEnv("DB_NAME", ""),
         DBPort:     getEnv("DB_PORT", "5432"),
-        DBSSLMODE:     getEnv("DB_SSLMODE", "require"),
+        DBSSLMODE:  getEnv("DB_SSLMODE", "require"),
+		CORSOrigin: getEnv("CORS_ORIGIN", "http://127.0.0.1:5173"),
 
 
         ServerPort: getEnv("SERVER_PORT", "8080"),
