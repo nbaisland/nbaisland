@@ -132,7 +132,7 @@ func main() {
     }
 
     go func() {
-        if err := r.Run("0.0.0.0:8080"); err != nil {
+        if err := r.Run(":8080"); err != nil {
             log.Fatalf("Server did not start: %v", err)
         }
     }()
