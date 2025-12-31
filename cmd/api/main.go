@@ -60,6 +60,7 @@ func main() {
 
     sched := scheduler.New()
 
+    
     sched.AddWeekly("Weekly Dividend", 4, 0, func(ctx context.Context) error {
         log.Println("Running scheduled weekly NBA stats update...")
         return nbaService.UpdateAllWeeklyStats(ctx, "2025-2026")
