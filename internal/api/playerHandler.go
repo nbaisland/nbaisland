@@ -72,10 +72,10 @@ func (h *PlayerHandler) GetPlayerByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"Error" : fmt.Sprintf("Could not find player: %v", err)}) 
 		return
 	}
-	if player == nil {
-		c.JSON(http.StatusNotFound, gin.H{"Error" : "Could not find player"})
-		return
-	}
+	// if player == nil {
+	// 	c.JSON(http.StatusOK, )
+	// 	return
+	// }
 	c.JSON(200, player)
 }
 
@@ -89,10 +89,6 @@ func (h *PlayerHandler) GetPlayerBySlug(c *gin.Context) {
 	player, err := h.PlayerService.GetPlayerBySlug(ctx, slug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"Error" : fmt.Sprintf("Could not find player: %v", err)}) 
-		return
-	}
-	if player == nil {
-		c.JSON(http.StatusNotFound, gin.H{"Error" : "Could not find player"})
 		return
 	}
 	c.JSON(200, player)

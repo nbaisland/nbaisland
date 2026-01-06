@@ -37,10 +37,6 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch user for id specified `%v`", id)})
 		return
 	}
-	if user == nil {
-		c.JSON(http.StatusNotFound, gin.H{"Error" : "Could not find user"})
-		return
-	}
 	c.JSON(200, user)
 }
 
@@ -55,10 +51,6 @@ func (h *UserHandler) GetUserByUsername(c *gin.Context) {
 	user, err := h.UserService.GetByUsername(ctx, username)
 	if err != nil {
 		c.JSON(500, gin.H{"error" : fmt.Sprintf("failed to fetch user for username specified `%v`, %v", username, err)})
-		return
-	}
-	if user == nil {
-		c.JSON(http.StatusNotFound, gin.H{"Error" : "Could not find user"})
 		return
 	}
 	c.JSON(200, user)

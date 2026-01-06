@@ -33,7 +33,7 @@ func (h *TransactionHandler) GetTransactionsOfUser(c *gin.Context){
 		return
 	}
 	if transactions == nil {
-		c.JSON(http.StatusNotFound, gin.H{"message" : "No Transactions found for user"})
+		c.JSON(http.StatusOK, [])
 		return
 	}
 	c.JSON(200, transactions)
@@ -54,7 +54,7 @@ func (h *TransactionHandler) GetTransactionsOfPlayer(c *gin.Context){
 		return
 	}
 	if transactions == nil {
-		c.JSON(http.StatusNotFound, gin.H{"message" : "No Transactions found for player"})
+		c.JSON(http.StatusOK, [])
 		return
 	}
 	c.JSON(200, transactions)
