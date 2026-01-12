@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	"github.com/nbaisland/nbaisland/internal/service"
@@ -87,13 +86,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
-
 	user, err := h.UserService.GetByUsername(ctx, req.Username)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
-
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error" : "User Does Not exist"})
+		return
+	}
+	
 	if !auth.CheckPassword(user.Password, req.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return

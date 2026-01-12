@@ -33,7 +33,7 @@ func (h *TransactionHandler) GetTransactionsOfUser(c *gin.Context){
 		return
 	}
 	if transactions == nil {
-		c.JSON(http.StatusOK, [])
+		c.JSON(http.StatusOK, []map[string]interface{}{})
 		return
 	}
 	c.JSON(200, transactions)
@@ -54,7 +54,7 @@ func (h *TransactionHandler) GetTransactionsOfPlayer(c *gin.Context){
 		return
 	}
 	if transactions == nil {
-		c.JSON(http.StatusOK, [])
+		c.JSON(http.StatusOK,  []map[string]interface{}{})
 		return
 	}
 	c.JSON(200, transactions)
