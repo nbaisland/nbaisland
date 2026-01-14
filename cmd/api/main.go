@@ -46,17 +46,26 @@ func main() {
 
     userRepo := &repository.PSQLUserRepo{Pool: pool}
     UserService := service.NewUserService(userRepo)
+ 
     playerRepo := &repository.PSQLPlayerRepo{Pool: pool}
     PlayerService := service.NewPlayerService(playerRepo)
+ 
     transactionRepo := &repository.PSQLTransactionRepo{Pool: pool}
     TransactionService := service.NewTransactionService(transactionRepo, playerRepo, userRepo)
-    HealthService := service.NewHealthService(pool)
+ 
+    priceHistoryRepo := &repository.PSQLPlayerPriceRepo{Pool: pool}
+    PriceService := service.NewPriceHistoryService(priceHistoryRepo)
 
+    HealthService := service.NewHealthService(pool)
+    
+    
     AuthHandler := &api.AuthHandler{UserService: UserService}
     userHandler := &api.UserHandler{UserService: UserService}
     playerHandler := &api.PlayerHandler{PlayerService: PlayerService}
     transactionHandler := &api.TransactionHandler{TransactionService: TransactionService}
     healthHandler := &api.HealthHandler{HealthService : HealthService}
+    priceHistoryHandler := &api.PriceHistoryHandler{PriceHistoryService: PriceService}
+
     // #TODO: NBA Handler (admin only features).. scores etc
 
     sched := scheduler.New()
@@ -64,14 +73,16 @@ func main() {
 
     sched.AddWeekly("Weekly Dividend", 4, 0, func(ctx context.Context) error {
         log.Println("Running scheduled weekly NBA stats update...")
-        return nbaService.UpdateAllWeeklyStats(ctx, "2025-2026")
+        return nbaService.UpdateAllWeeklyStats(ctx, "2025-26")
     })
 
     sched.AddWeekly("Season Stats", 5, 0, func(ctx context.Context) error {
         log.Println("Running scheduled season NBA stats update...")
-        return nbaService.UpdateAllSeasonStats(ctx, "2025-2026")
+        return nbaService.UpdateAllSeasonStats(ctx, "2025-26")
     })
 
+
+    // #TODO: CALCULATE VALUE WEEKLY ALSO
     appCtx, appCancel := context.WithCancel(context.Background())
     defer appCancel()
 
@@ -114,6 +125,7 @@ func main() {
         api.GET("/players", playerHandler.GetPlayersByID)
         api.GET("/players/:id", playerHandler.GetPlayerByID)
         api.GET("/players/name/:slug", playerHandler.GetPlayerBySlug)
+        api.GET("/players/:id/price-history", priceHistoryHandler.GetPlayerPriceHistory)
         api.GET("/auth/me", AuthHandler.GetCurrentUser)
         // api.POST("/auth/logout", AuthHandler.Logout)
 
