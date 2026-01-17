@@ -1,30 +1,52 @@
 package main
 
 import (
-    "log"
     "context"
-    "time"
     "fmt"
+    "log"
     "os"
     "os/signal"
-    "syscall"
     "strings"
+    "syscall"
+    "time"
 
-    "github.com/gin-gonic/gin"
     "github.com/gin-contrib/cors"
-    "github.com/nbaisland/nbaisland/internal/config"
-    "github.com/nbaisland/nbaisland/internal/service"
-    "github.com/nbaisland/nbaisland/internal/repository"
+    "github.com/gin-gonic/gin"
+    "go.uber.org/zap"
+
     "github.com/nbaisland/nbaisland/internal/api"
-    "github.com/nbaisland/nbaisland/internal/nba"
-    "github.com/nbaisland/nbaisland/internal/scheduler"
+    "github.com/nbaisland/nbaisland/internal/config"
+    "github.com/nbaisland/nbaisland/internal/logger"
     "github.com/nbaisland/nbaisland/internal/middleware"
+    "github.com/nbaisland/nbaisland/internal/nba"
+    "github.com/nbaisland/nbaisland/internal/repository"
+    "github.com/nbaisland/nbaisland/internal/scheduler"
+    "github.com/nbaisland/nbaisland/internal/service"
 )
 
 func main() {
     cfg := config.Load()
-	dsn := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v",
-        cfg.DBUser, 
+    if err := os.MkdirAll("logs", 0755); err != nil {
+        log.Fatal("Failed to create logs directory, permissions?:", err)
+    }
+
+    if err := logger.InitLogger(cfg.ENV); err != nil {
+        log.Fatal("Failed to initialize logger:", err)
+    }
+    defer logger.Sync()
+
+    logger.Log.Info("Starting application",
+        zap.String("env", cfg.ENV),
+        zap.String("version", "0.1.0"),
+    )
+
+    if cfg.ENV == "production" {
+	    gin.SetMode(gin.ReleaseMode)
+    } else {
+	    gin.SetMode(gin.DebugMode)
+    }
+    dsn := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v",
+        cfg.DBUser,
         cfg.DBPassword,
         cfg.DBHost,
         cfg.DBPort,
@@ -35,10 +57,10 @@ func main() {
 
     pool, err := repository.NewDB(ctx, dsn)
     if err != nil {
-        log.Fatal(err)
+        logger.Log.Fatal("Failed to connect to database", zap.Error(err))
     }
     defer pool.Close()
-    log.Println("Connected to the database successfully!")
+    logger.Log.Info("Connected to the database successfully")
 
     nbaClient := nba.NewClient()
     nbaRepo := nba.NewRepository(pool)
@@ -46,41 +68,38 @@ func main() {
 
     userRepo := &repository.PSQLUserRepo{Pool: pool}
     UserService := service.NewUserService(userRepo)
- 
+
     playerRepo := &repository.PSQLPlayerRepo{Pool: pool}
     PlayerService := service.NewPlayerService(playerRepo)
- 
+
     transactionRepo := &repository.PSQLTransactionRepo{Pool: pool}
     TransactionService := service.NewTransactionService(transactionRepo, playerRepo, userRepo)
- 
+
     priceHistoryRepo := &repository.PSQLPlayerPriceRepo{Pool: pool}
     PriceService := service.NewPriceHistoryService(priceHistoryRepo)
 
     HealthService := service.NewHealthService(pool)
-    
-    
+
     AuthHandler := &api.AuthHandler{UserService: UserService}
     userHandler := &api.UserHandler{UserService: UserService}
     playerHandler := &api.PlayerHandler{PlayerService: PlayerService}
     transactionHandler := &api.TransactionHandler{TransactionService: TransactionService}
-    healthHandler := &api.HealthHandler{HealthService : HealthService}
+    healthHandler := &api.HealthHandler{HealthService: HealthService}
     priceHistoryHandler := &api.PriceHistoryHandler{PriceHistoryService: PriceService}
 
     // #TODO: NBA Handler (admin only features).. scores etc
 
     sched := scheduler.New()
 
-
     sched.AddWeekly("Weekly Dividend", 4, 0, func(ctx context.Context) error {
-        log.Println("Running scheduled weekly NBA stats update...")
+        logger.Log.Info("Running scheduled weekly NBA stats update")
         return nbaService.UpdateAllWeeklyStats(ctx, "2025-26")
     })
 
     sched.AddWeekly("Season Stats", 5, 0, func(ctx context.Context) error {
-        log.Println("Running scheduled season NBA stats update...")
+        logger.Log.Info("Running scheduled season NBA stats update")
         return nbaService.UpdateAllSeasonStats(ctx, "2025-26")
     })
-
 
     // #TODO: CALCULATE VALUE WEEKLY ALSO
     appCtx, appCancel := context.WithCancel(context.Background())
@@ -88,16 +107,19 @@ func main() {
 
     sched.Start(appCtx)
 
+    r := gin.New()
 
-    r := gin.Default()
+    r.Use(gin.Recovery())
+    r.Use(middleware.RequestIDMiddleware()) 
+    r.Use(middleware.LoggingMiddleware())
     allowedOrigins := []string{"http://localhost:3000"}
     if cfg.CORSOrigin != "" {
-    envOrigins := strings.Split(cfg.CORSOrigin, ",")
-    for _, origin := range envOrigins {
-        allowedOrigins = append(allowedOrigins, strings.TrimSpace(origin))
+        envOrigins := strings.Split(cfg.CORSOrigin, ",")
+        for _, origin := range envOrigins {
+            allowedOrigins = append(allowedOrigins, strings.TrimSpace(origin))
+        }
     }
-}
-    log.Printf("ALLOWED ORIGINS: %v", allowedOrigins)
+    logger.Log.Info("CORS configuration", zap.Strings("allowed_origins", allowedOrigins))
     r.Use(cors.New(cors.Config{
         AllowOrigins:     allowedOrigins,
         AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -112,8 +134,6 @@ func main() {
 
     r.POST("/auth/register", AuthHandler.Register)
     r.POST("/auth/login", AuthHandler.Login)
-
-
 
     api := r.Group("/api")
     api.Use(middleware.AuthMiddleware())
@@ -149,17 +169,16 @@ func main() {
 
     go func() {
         if err := r.Run(":8080"); err != nil {
-            log.Fatalf("Server did not start: %v", err)
+            logger.Log.Fatal("Server failed to start", zap.Error(err))
         }
     }()
-    log.Println("Server started on 8080")
+    logger.Log.Info("Server started", zap.Int("port", 8080))
+    
     quit := make(chan os.Signal, 1)
     signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
     <-quit
-    
-    log.Println("Shutting down server")
+
+    logger.Log.Info("Shutting down server")
 
     appCancel()
-
-    
 }
