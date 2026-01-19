@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	ENV         string
 	DBHost      string
 	DBUser      string
 	DBPassword  string
@@ -25,6 +26,7 @@ func Load() *Config {
     }
 
     c := &Config{
+        ENV:        getEnv("ENV", "development"),
         DBHost:     getEnv("DB_HOST", ""),
         DBUser:     getEnv("DB_USER", ""),
         DBPassword: getEnv("DB_PASS", ""),

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	// "github.com/nbaisland/nbaisland/internal/models"
@@ -30,7 +31,11 @@ func (r *PlayerMapRepo) GetNBAPlayerByAppID(ctx context.Context, playerID int64)
 	}
 
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf(
+			"GetNBAPlayerByAppID failed (player_id=%d): %w",
+			playerID,
+			err,
+		)
 	}
 
 	return nbaPlayerID, nil
@@ -50,7 +55,11 @@ func (r *PlayerMapRepo) GetAppPlayerByNBAID(ctx context.Context, nbaID int64) (i
 	}
 
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf(
+			"GetAppPlayerByNBAID failed (player_id=%d): %w",
+			appPlayerID,
+			err,
+		)
 	}
 
 	return appPlayerID, nil

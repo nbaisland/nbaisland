@@ -4,8 +4,10 @@ package repository
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
+	"go.uber.org/zap"
+
+	"github.com/nbaisland/nbaisland/internal/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 )
@@ -14,7 +16,10 @@ import (
 func NewDB(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	cfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
-		log.Fatal(err)
+		logger.Log.Fatal("Failed to Connect to db",
+			zap.Error(err),
+			zap.String("handler", "NewDB"),
+		)
 	}
 
 
@@ -25,9 +30,12 @@ func NewDB(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 
 	if err != nil {
+		logger.Log.Error("Failed to Create Pool",
+			zap.Error(err),
+			zap.String("handler", "NewDB"),
+		)
         return nil, fmt.Errorf("Coudlnt create pool: %v", err)
     }
-    log.Println("Connected to db")
 
 	return pool, nil
 }

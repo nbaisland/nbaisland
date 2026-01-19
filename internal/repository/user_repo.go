@@ -48,10 +48,11 @@ func (r *PSQLUserRepo) GetByID(ctx context.Context, id int64) (*models.User, err
 
 func (r *PSQLUserRepo) GetByUsername(ctx context.Context, username string) (*models.User, error) {
 	var u = &models.User{}
-	err := r.Pool.QueryRow(ctx, "SELECT id, name, username, email, currency from users where username=$1", username).Scan(
+	err := r.Pool.QueryRow(ctx, "SELECT id, name, username, password, email, currency from users where username=$1", username).Scan(
 		&u.ID,
 		&u.Username,
 		&u.Name,
+		&u.Password,
 		&u.Email,
 		&u.Currency,
 	)

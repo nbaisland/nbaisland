@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+	"github.com/nbaisland/nbaisland/internal/logger"
 	"github.com/nbaisland/nbaisland/internal/service"
 )
 
@@ -32,6 +34,10 @@ func (h *PriceHistoryHandler) GetPlayerPriceHistory(c *gin.Context) {
 		timeRange,
 	)
 	if err != nil {
+		logger.Log.Error("Failed to Fetch Price History",
+			zap.Error(err),
+			zap.String("handler", "GetPlayerPriceHistory"),
+		)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch price history"})
 		return
 	}
