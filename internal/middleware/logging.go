@@ -63,6 +63,9 @@ func LoggingMiddleware() gin.HandlerFunc {
 			zap.Int("size", c.Writer.Size()),
 		)
 
+		if path == "/auth/login" {
+			return
+		}
 		if duration > time.Second {
 			logger.Log.Warn("Slow request detected",
 				zap.String("path", path),

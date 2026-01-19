@@ -35,7 +35,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	ctx := c.Request.Context()
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warn("Failed to Register User",
+		logger.Log.Error("Failed to Register User",
 			zap.Error(err),
 			zap.String("handler", "Register"),
 			zap.Any("Request", req),
@@ -44,11 +44,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	if req.Username == "" || req.Password == "" {
-		logger.Log.Debug("Blank Username or Password",
+	if req.Username == "" {
+		logger.Log.Debug("Blank Username",
 			zap.String("handler", "Register"),
-			zap.String("Username", req.Username),
-			zap.String("Password", req.Password),
 		)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username required"})
 		return
@@ -56,7 +54,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	if req.Password == "" {
 		logger.Log.Debug("Blank Password",
 			zap.String("handler", "Register"),
-			zap.String("Password", req.Password),
 		)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Password required"})
 		return
@@ -64,9 +61,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	if req.Email == "" {
 		logger.Log.Debug("Blank Email",
 			zap.String("handler", "Register"),
-			zap.String("Email", req.Email),
 		)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Password required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email required"})
 		return
 	}
 
@@ -82,9 +78,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	hashedPassword, err := auth.HashPassword(req.Password)
 	if err != nil {
-		logger.Log.Debug("Blank Email",
+		logger.Log.Debug("Problem hasging password",
 			zap.String("handler", "Register"),
-			zap.String("Email", req.Email),
+			zap.Error(err),
 		)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user, password issue"})
 		return
@@ -128,6 +124,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	ctx := c.Request.Context()
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Log.Error("Failed to Parse Login message",
+			zap.Error(err),
+			zap.String("handler", "Register"),
+			zap.Any("Request", req),
+		)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
@@ -135,17 +136,24 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if err != nil {
 		logger.Log.Debug("Could not get username",
 			zap.String("handler", "Login"),
-			zap.String("Uername", req.Username),
+			zap.Error(err),
 		)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 	if user == nil {
+		logger.Log.Debug("User doesnt exist",
+			zap.String("handler", "Login"),
+			zap.String("Username", req.Username),
+		)
 		c.JSON(http.StatusNotFound, gin.H{"error" : "User Does Not exist"})
 		return
 	}
 	
 	if !auth.CheckPassword(user.Password, req.Password) {
+		logger.Log.Debug("Invalid Password ",
+			zap.String("handler", "Login"),
+		)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
@@ -159,7 +167,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
 		return
 	}
-
+	logger.Log.Info("LOGIN OK")
 	c.JSON(http.StatusOK, AuthResponse{
 		Token:    token,
 		UserID:   user.ID,
@@ -171,6 +179,10 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	claims, ok := c.Get("user")
 	if !ok {
+		logger.Log.Error("Could not get Current user",
+			zap.String("handler", "GetCurrentUser"),
+			zap.Any("Claims", claims),
+		)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}

@@ -45,7 +45,7 @@ func (h *TransactionHandler) GetTransactionsOfUser(c *gin.Context) {
 	}
 
 	if transactions == nil {
-		logger.Log.Info("no transactions found for user",
+		logger.Log.Debug("no transactions found for user",
 			zap.Int64("user_id", id),
 		)
 		c.JSON(http.StatusOK, []map[string]interface{}{})
@@ -80,7 +80,7 @@ func (h *TransactionHandler) GetTransactionsOfPlayer(c *gin.Context) {
 	}
 
 	if transactions == nil {
-		logger.Log.Info("no transactions found for player",
+		logger.Log.Debug("no transactions found for player",
 			zap.Int64("player_id", id),
 		)
 		c.JSON(http.StatusOK, []map[string]interface{}{})
@@ -113,7 +113,7 @@ func (h *TransactionHandler) GetTransactionByID(c *gin.Context) {
 	}
 
 	if transaction == nil {
-		logger.Log.Info("transaction not found",
+		logger.Log.Debug("transaction not found",
 			zap.Int64("transaction_id", id),
 		)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Could not find transaction"})
