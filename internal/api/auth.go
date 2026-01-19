@@ -167,7 +167,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
 		return
 	}
-	logger.Log.Info("LOGIN OK")
 	c.JSON(http.StatusOK, AuthResponse{
 		Token:    token,
 		UserID:   user.ID,
