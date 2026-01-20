@@ -16,6 +16,7 @@ import (
 
     "github.com/nbaisland/nbaisland/internal/api"
     "github.com/nbaisland/nbaisland/internal/config"
+    "github.com/nbaisland/nbaisland/internal/database"
     "github.com/nbaisland/nbaisland/internal/logger"
     "github.com/nbaisland/nbaisland/internal/middleware"
     "github.com/nbaisland/nbaisland/internal/nba"
@@ -53,6 +54,13 @@ func main() {
         cfg.DBName,
         cfg.DBSSLMODE,
     )
+
+    logger.Log.Info("Running DB Migrations")
+    if err:= database.RunMigrations(dsn); err != nil{
+        logger.Log.Fatal("Failed to run migrations",
+            zap.Error(err),
+        )
+    }
     ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 
     pool, err := repository.NewDB(ctx, dsn)
