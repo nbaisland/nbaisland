@@ -68,9 +68,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	existingUser, _ :=  h.UserService.GetByUsername(ctx, req.Username)
 	if existingUser != nil {
-		logger.Log.Debug("Blank Email",
+		logger.Log.Debug("Existing user already exists",
 			zap.String("handler", "Register"),
-			zap.String("Email", req.Email),
+			zap.String("Email", req.Username),
 		)
 		c.JSON(http.StatusConflict, gin.H{"error": "Username already taken"})
 		return
@@ -78,7 +78,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	hashedPassword, err := auth.HashPassword(req.Password)
 	if err != nil {
-		logger.Log.Debug("Problem hasging password",
+		logger.Log.Debug("Problem hashing password",
 			zap.String("handler", "Register"),
 			zap.Error(err),
 		)
