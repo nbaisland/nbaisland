@@ -1,10 +1,8 @@
 name: Deploy Backend to Pi
-
 on:
   push:
     branches:
       - main
-
 jobs:
   deploy:
     runs-on: [self-hosted, linux, arm64]
@@ -12,31 +10,37 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
-
+      
       - name: Build application
         run: |
           go mod download
           go build -o nbaisland-backend ./cmd/api
-
+      
       - name: Stop existing service
         run: |
           sudo systemctl stop nbaisland-backend || true
-
+      
       - name: Deploy application
         run: |
+          sudo mkdir -p /etc/nbaisland/db
           sudo cp nbaisland-backend /usr/local/bin/
           sudo chmod +x /usr/local/bin/nbaisland-backend
-
+          sudo cp -r db/migrations /etc/nbaisland/db/
+      
       - name: Copy .env file
         run: |
-          sudo mkdir -p /etc/nbaisland
           sudo cp $HOME/.env.nbaisland /etc/nbaisland/.env || echo "Warning: .env file not found"
-
+      
+      - name: Create logs directory
+        run: |
+          sudo mkdir -p /etc/nbaisland/logs
+          sudo chown $USER:$USER /etc/nbaisland/logs
+      
       - name: Start service
         run: |
           sudo systemctl start nbaisland-backend
