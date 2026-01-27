@@ -86,6 +86,9 @@ func main() {
     priceHistoryRepo := &repository.PSQLPlayerPriceRepo{Pool: pool}
     PriceService := service.NewPriceHistoryService(priceHistoryRepo)
 
+    playerMapRepo := &repository.PlayerMapRepo{Pool: pool}
+
+    valueService := service.NewValueService(playerRepo, nbaRepo, playerMapRepo)
     HealthService := service.NewHealthService(pool)
 
     AuthHandler := &api.AuthHandler{UserService: UserService}
@@ -104,12 +107,16 @@ func main() {
         return nbaService.UpdateAllWeeklyStats(ctx, "2025-26")
     })
 
-    sched.AddWeekly("Season Stats", 5, 0, func(ctx context.Context) error {
+    sched.AddNightly("Season Stats", 2, 0, func(ctx context.Context) error {
         logger.Log.Info("Running scheduled season NBA stats update")
         return nbaService.UpdateAllSeasonStats(ctx, "2025-26")
     })
 
-    // #TODO: CALCULATE VALUE WEEKLY ALSO
+    sched.AddNightly("Daily Update", 2, 40, func(ctx context.Context) error {
+        logger.Log.Info("Daily Value Update")
+        return valueService.UpdateValueForAllPlayers(ctx, "2025-26")
+    })
+
     appCtx, appCancel := context.WithCancel(context.Background())
     defer appCancel()
 

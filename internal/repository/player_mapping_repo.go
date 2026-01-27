@@ -4,14 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	// "github.com/nbaisland/nbaisland/internal/models"
+	"github.com/nbaisland/nbaisland/internal/models"
 )
 
 type PlayerIDMapRepository interface {
 	GetNBAPlayerByAppID(ctx context.Context, playerID int64) (int64, error)
 	GetAppPlayerByNBAID(ctx context.Context, nbaID int64) (int64, error)
+	GetAllIDPairs(ctx context.Context, nbaID int64) ([] models.PlayerMapping, error)
 }
 
 type PlayerMapRepo struct {
@@ -63,4 +65,32 @@ func (r *PlayerMapRepo) GetAppPlayerByNBAID(ctx context.Context, nbaID int64) (i
 	}
 
 	return appPlayerID, nil
+}
+
+func (r *PlayerMapRepo) GetAllIDPairs(ctx context.Context, nbaID int64) ([] models.PlayerMapping, error) {
+	var players []models.PlayerMapping
+	query := `
+        SELECT DISTINCT p.id, m.nba_player_id
+        FROM players p
+        JOIN player_nba_mapping m ON p.id = m.player_id
+    `
+    
+    rows, err := r.Pool.Query(ctx, query)
+    if err != nil {
+        return nil, fmt.Errorf("failed to query player Mapping: %w", err)
+    }
+	if errors.Is(err, pgx.ErrNoRows) {
+        return nil, fmt.Errorf("Player Mappings do not exist this is a problem")
+	}
+    defer rows.Close()
+    for rows.Next() {
+        var pm models.PlayerMapping
+        if err := rows.Scan(&pm.AppPlayerID, &pm.NbaPlayerID); err != nil {
+            log.Printf("Warning: Failed to scan player: %v", err)
+            continue
+        }
+        players = append(players, pm)
+    }
+
+	return players, nil
 }

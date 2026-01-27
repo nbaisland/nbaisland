@@ -35,6 +35,15 @@ func (s *Scheduler) AddWeekly(name string, runAtHour, runAtMinute int, fn func(c
 	})
 }
 
+func (s *Scheduler) AddNightly(name string, runAtHour, runAtMinute int, fn func(ctx context.Context) error) {
+	s.jobs = append(s.jobs, Job{
+		Name:     name,
+		Schedule: 24 * time.Hour,
+		RunAt:    time.Date(0, 1, 1, runAtHour, runAtMinute, 0, 0, time.UTC),
+		Fn:       fn,
+	})
+}
+
 func (s *Scheduler) Start(ctx context.Context) {
 	for _, job := range s.jobs {
 		go s.runJob(ctx, job)
@@ -42,7 +51,7 @@ func (s *Scheduler) Start(ctx context.Context) {
 }
 
 func (s *Scheduler) runJob(ctx context.Context, job Job) {
-	nextRun := s.calculateNextRun(job.RunAt)
+	nextRun := s.calculateNextRun(job.RunAt, job.Schedule)
 
 	logger.Log.Info(
 		"scheduled job initialized",
@@ -85,7 +94,7 @@ func (s *Scheduler) runJob(ctx context.Context, job Job) {
 	}
 }
 
-func (s *Scheduler) calculateNextRun(runAt time.Time) time.Time {
+func (s *Scheduler) calculateNextRun(runAt time.Time, schedule time.Duration) time.Time {
 	now := time.Now()
 
 	next := time.Date(
@@ -100,7 +109,7 @@ func (s *Scheduler) calculateNextRun(runAt time.Time) time.Time {
 	)
 
 	if now.After(next) {
-		next = next.Add(7 * 24 * time.Hour)
+		next = next.Add(schedule)
 	}
 
 	return next
