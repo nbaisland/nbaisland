@@ -246,7 +246,7 @@ func (s *NBAService) SeedTopPlayers(ctx context.Context, season string, minGames
         
         // TODO: Update value better
         value := stats.PointsPerGame * 10
-        capacity := 10
+        capacity := 100
         slug := utils.ToSlug(stats.PlayerName)
         
         var appPlayerID int

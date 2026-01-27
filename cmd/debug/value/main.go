@@ -7,13 +7,18 @@ import (
     "time"
     
     "github.com/nbaisland/nbaisland/internal/config"
+    "github.com/nbaisland/nbaisland/internal/logger"
     "github.com/nbaisland/nbaisland/internal/nba"
     "github.com/nbaisland/nbaisland/internal/repository"
     "github.com/nbaisland/nbaisland/internal/service"
+    "go.uber.org/zap"
 )
 
 func main() {
-    log.Println("=== Player Value Update ===")
+    if err := logger.InitLogger("dev"); err != nil {
+        log.Fatal("Failed to initialize logger:", err)
+    }
+    defer logger.Sync()
     
     cfg := config.Load()
     dsn := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v",
@@ -24,11 +29,11 @@ func main() {
     cancel()
     
     if err != nil {
-        log.Fatalf("Failed to connect to DB: %v", err)
+        logger.Log.Fatal("Failed to connect to DB:", zap.Error(err))
     }
     defer pool.Close()
     
-    log.Println("Connected to database")
+    logger.Log.Debug("Connected to database")
     
     playerRepo := &repository.PSQLPlayerRepo{Pool: pool}
     playerMapRepo := &repository.PlayerMapRepo{Pool: pool}
@@ -37,10 +42,10 @@ func main() {
     valueService := service.NewValueService(playerRepo, nbaRepo, playerMapRepo)
     
     ctx = context.Background()
-    err = valueService.UpdateValueForAllPlayers(ctx)
+    err = valueService.UpdateValueForAllPlayers(ctx, "2025-26")
     if err != nil {
-        log.Fatalf("Error updating player values: %v", err)
+        logger.Log.Fatal("Error updating player values:", zap.Error(err))
     }
     
-    log.Println("Successfully updated values for all players!")
+    logger.Log.Info("Successfully updated values for all players!")
 }
