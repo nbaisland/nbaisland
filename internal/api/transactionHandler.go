@@ -8,6 +8,7 @@ import (
 
 	"github.com/nbaisland/nbaisland/internal/logger"
 	"github.com/nbaisland/nbaisland/internal/service"
+	"github.com/nbaisland/nbaisland/metrics"
 )
 
 type TransactionRequest struct {
@@ -147,6 +148,7 @@ func (h *TransactionHandler) BuyTransaction(c *gin.Context) {
 	}
 
 	if err := h.TransactionService.Buy(ctx, req.UserID, req.PlayerID, req.Quantity); err != nil {
+		metrics.TransactionsTotal.WithLabelValues("Buy", "failure")
 		logger.Log.Error("failed to execute buy transaction",
 			zap.Int64("user_id", req.UserID),
 			zap.Int64("player_id", req.PlayerID),
@@ -156,6 +158,7 @@ func (h *TransactionHandler) BuyTransaction(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not make purchase"})
 		return
 	}
+	metrics.TransactionsTotal.WithLabelValues("Buy", "success")
 
 	c.JSON(http.StatusOK, req)
 }
@@ -173,6 +176,7 @@ func (h *TransactionHandler) SellTransaction(c *gin.Context) {
 
 	proceeds, err := h.TransactionService.Sell(ctx, req.UserID, req.PlayerID, req.Quantity)
 	if err != nil {
+		metrics.TransactionsTotal.WithLabelValues("Sell", "failure")
 		logger.Log.Error("failed to execute sell transaction",
 			zap.Int64("user_id", req.UserID),
 			zap.Int64("player_id", req.PlayerID),
@@ -182,6 +186,7 @@ func (h *TransactionHandler) SellTransaction(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not process trade"})
 		return
 	}
+	metrics.TransactionsTotal.WithLabelValues("Sell", "success")
 
 	c.JSON(http.StatusOK, gin.H{"proceeds": proceeds})
 }

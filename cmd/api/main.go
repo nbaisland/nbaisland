@@ -12,6 +12,7 @@ import (
 
     "github.com/gin-contrib/cors"
     "github.com/gin-gonic/gin"
+    "github.com/prometheus/client_golang/prometheus/promhttp"
     "go.uber.org/zap"
 
     "github.com/nbaisland/nbaisland/internal/api"
@@ -146,7 +147,7 @@ func main() {
 
     r.GET("/health", healthHandler.CheckHealth)
     r.GET("/ready", healthHandler.CheckReady)
-
+    r.GET("/metrics",  gin.WrapH(promhttp.Handler()))
     r.POST("/auth/register", AuthHandler.Register)
     r.POST("/auth/login", AuthHandler.Login)
 

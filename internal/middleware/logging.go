@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"fmt"
     "net/http"
     "time"
     "go.uber.org/zap"
     "github.com/gin-gonic/gin"
 	"github.com/nbaisland/nbaisland/internal/logger"
+	"github.com/nbaisland/nbaisland/metrics"
 )
 
 type responseWriter struct {
@@ -62,6 +64,16 @@ func LoggingMiddleware() gin.HandlerFunc {
 			zap.String("user_agent", c.Request.UserAgent()),
 			zap.Int("size", c.Writer.Size()),
 		)
+		metrics.HttpRequestsTotal.WithLabelValues(
+			c.Request.Method,
+			path,
+			fmt.Sprintf("%d",c.Writer.Status()),
+		).Inc()
+
+		metrics.HttpRequestDuration.WithLabelValues(
+			c.Request.Method,
+			path,
+		).Observe(duration.Seconds())
 
 		if path == "/auth/login" {
 			return
