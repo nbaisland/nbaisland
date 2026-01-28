@@ -50,7 +50,7 @@ func DefaultValueWeights() ValueWeights {
         CareerMult: 1.0,
         
         DemandScaling:  0.4,
-        TotalCapacity:  10,
+        TotalCapacity:  20, // todo: make this dynamic
         MinGamesPlayed: 10,
     }
 }
