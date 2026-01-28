@@ -1,6 +1,14 @@
 .git
+.github
+*.md
 .env
+.env.*
+logs/
 *.log
-vendor
-bin
-tmp
+.vscode
+.idea
+dist/
+build/
+tmp/
+vendor/
+node_modules/

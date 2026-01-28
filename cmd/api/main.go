@@ -59,6 +59,7 @@ func main() {
     logger.Log.Info("Running DB Migrations")
     if err:= database.RunMigrations(dsn); err != nil{
         logger.Log.Fatal("Failed to run migrations",
+            zap.String("DSN", dsn),
             zap.Error(err),
         )
     }
