@@ -19,14 +19,14 @@ jobs:
       
       - name: Build and deploy with Docker Compose
         run: |
-          docker-compose down
-          docker-compose build
-          docker-compose up -d
+          docker compose down
+          docker compose build
+          docker compose up -d
       
       - name: Check health
         run: |
           sleep 10
-          docker-compose logs --tail 50
+          docker compose logs --tail 50
           curl -f http://localhost:8080/health || exit 1
       
       - name: Cleanup
