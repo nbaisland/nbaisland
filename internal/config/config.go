@@ -22,7 +22,7 @@ type Config struct {
 func Load() *Config {
 
 	if err := godotenv.Load(); err != nil {
-        log.Println("No .env file found, using environment variables")
+        log.Println("No .env file found, using environment variables.. expected using docker")
     }
 
     c := &Config{
